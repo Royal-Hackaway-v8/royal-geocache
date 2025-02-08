@@ -9,7 +9,7 @@ export default function AboutPage() {
 						About Uni Geocache Hunt
 					</h1>
 
-					<div className="bg-green-200 backdrop-blur-md rounded-lg p-4">
+					<div className="bg-white backdrop-blur-md rounded-lg p-4">
 						<p>
 							Welcome to CacheGrab, the exciting new way to
 							explore your university campus! We've combined the
@@ -18,11 +18,11 @@ export default function AboutPage() {
 						</p>
 					</div>
 
-					<h2 className="text-2xl font-bold mt-6 mb-4 text-green-400">
+					<h2 className="text-3xl font-bold mt-6 mb-4 text-green-400">
 						Our Mission
 					</h2>
 
-					<div className="bg-green-200 backdrop-blur-md rounded-lg p-4">
+					<div className="bg-white backdrop-blur-md rounded-lg p-4">
 						<p>
 							Our mission is to make exploring your campus more
 							fun and interactive. We believe that learning about
@@ -32,11 +32,11 @@ export default function AboutPage() {
 						</p>
 					</div>
 
-					<h2 className="text-2xl font-bold mt-6 mb-4 text-green-400">
+					<h2 className="text-3xl font-bold mt-6 mb-4 text-green-400">
 						How It Works
 					</h2>
 
-					<div className="bg-green-200 backdrop-blur-md rounded-lg p-4">
+					<div className="bg-white backdrop-blur-md rounded-lg p-4">
 						<p>
 							Using our app, you can discover hidden virtual
 							"capsules" scattered across campus. These capsules
