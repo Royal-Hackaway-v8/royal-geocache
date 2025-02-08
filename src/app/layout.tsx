@@ -18,9 +18,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body
-				className={`bg-background text-foreground bg-gradient-to-br from-green-200 to-green-600`}
-			>
+			<body className="gradient-background">
 				<main className="min-h-screen flex flex-col">
 					<NavMenu />
 
