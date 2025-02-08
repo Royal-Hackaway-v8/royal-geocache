@@ -1,3 +1,4 @@
+import NavMenu from "../components/ui/NavMenu";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -21,8 +22,10 @@ export default function RootLayout({
 				className={`bg-background text-foreground bg-gradient-to-r from-blue-200 to-blue-600`}
 			>
 				<main className="min-h-screen flex flex-col">
+					<NavMenu />
+
 					{/* Main Content */}
-					{children}
+					<div>{children}</div>
 				</main>
 			</body>
 		</html>
