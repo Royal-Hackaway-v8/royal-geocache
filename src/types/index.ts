@@ -16,4 +16,6 @@ export interface Cache {
 	lat: number;
 	lng: number;
 	createdAt: number;
+	image?: string; // Base64 encoded image blob
+	audio?: string; // Base64 encoded audio blob
 }
