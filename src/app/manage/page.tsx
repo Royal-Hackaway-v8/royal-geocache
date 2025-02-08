@@ -6,7 +6,7 @@ import { DB } from "@/config/firebase";
 import { ref, onValue, push, set, update, remove } from "firebase/database";
 import { Cache } from "@/types";
 
-// Convert Blob to Base64
+// Convert Blob to Base64 (returns full data URL)
 const blobToBase64 = (blob: Blob): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -215,7 +215,7 @@ const CacheForm = ({
 	);
 };
 
-// Cache List Component
+// Cache List Component (using stored full data URLs)
 const CacheList = ({
 	caches,
 	onEdit,
@@ -225,6 +225,21 @@ const CacheList = ({
 	onEdit: (cache: Cache) => void;
 	onDelete: (id: string) => void;
 }) => {
+	// Modal state for viewing images/audio
+	const [modalContent, setModalContent] = useState<{
+		type: "image" | "audio";
+		src: string;
+	} | null>(null);
+
+	// Simply set modal content to the stored data URL
+	const handleOpenModal = (type: "image" | "audio", dataUrl: string) => {
+		setModalContent({ type, src: dataUrl });
+	};
+
+	const handleCloseModal = () => {
+		setModalContent(null);
+	};
+
 	return (
 		<div>
 			<h2 className="text-xl font-bold mb-4">Caches</h2>
@@ -240,8 +255,42 @@ const CacheList = ({
 						<span>Lat: {cache.lat}</span>,{" "}
 						<span>Lng: {cache.lng}</span>
 					</p>
-					{cache.image && <img src={cache.image} alt="Cache" />}
-					{cache.audio && <audio controls src={cache.audio} />}
+
+					{/* Clickable image preview */}
+					{cache.image && (
+						<div
+							className="cursor-pointer hover:opacity-75 mb-2"
+							onClick={() =>
+								handleOpenModal("image", cache.image!)
+							}
+						>
+							<img
+								src={cache.image}
+								alt="Cache"
+								className="max-w-xs"
+							/>
+						</div>
+					)}
+
+					{/* Audio player with modal trigger */}
+					{cache.audio && (
+						<div className="mb-2">
+							<audio
+								controls
+								src={cache.audio}
+								className="w-full"
+							/>
+							<button
+								onClick={() =>
+									handleOpenModal("audio", cache.audio!)
+								}
+								className="mt-2 bg-blue-500 text-white p-1 rounded"
+							>
+								View Audio
+							</button>
+						</div>
+					)}
+
 					<div className="mt-2 flex space-x-2">
 						<button
 							onClick={() => onEdit(cache)}
@@ -258,6 +307,40 @@ const CacheList = ({
 					</div>
 				</div>
 			))}
+
+			{/* Modal for viewing images or audio */}
+			{modalContent && (
+				<div
+					className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+					onClick={handleCloseModal}
+				>
+					<div
+						className="bg-white p-4 rounded relative"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<button
+							onClick={handleCloseModal}
+							className="absolute top-0 right-0 m-2 text-gray-700"
+						>
+							X
+						</button>
+						{modalContent.type === "image" ? (
+							<img
+								src={modalContent.src}
+								alt="Preview"
+								className="max-w-full max-h-[80vh]"
+							/>
+						) : (
+							<audio
+								controls
+								src={modalContent.src}
+								autoPlay
+								className="w-full"
+							/>
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
@@ -299,8 +382,8 @@ export default function ManagePage() {
 			...formData,
 			lat: parseFloat(formData.lat),
 			lng: parseFloat(formData.lng),
-			image: imageBlob ? await blobToBase64(imageBlob) : undefined,
-			audio: audioBlob ? await blobToBase64(audioBlob) : undefined,
+			...(imageBlob ? { image: await blobToBase64(imageBlob) } : {}),
+			...(audioBlob ? { audio: await blobToBase64(audioBlob) } : {}),
 		};
 
 		if (editingCacheId) {
@@ -353,7 +436,6 @@ export default function ManagePage() {
 	const handleDelete = async (id: string) => {
 		if (confirm("Are you sure you want to delete this cache?")) {
 			await remove(ref(DB, `caches/${id}`));
-			// If the deleted cache is currently being edited, cancel edit mode
 			if (editingCacheId === id) {
 				cancelEdit();
 			}
