@@ -12,6 +12,8 @@ chicken nuggets
 
 [Working???](https://prod.liveshare.vsengsaas.visualstudio.com/join?1F1A09D76E665394ABAAF0D2D858565BA2C3)
 
+[Test](https://prod.liveshare.vsengsaas.visualstudio.com/join?B5D73B1A76F84EE70E5D00FC1DB948C5B01B)
+
 bigger hairy sweaty balls on feet covered in mushrooms
 
 # nextjs-firebase-app
@@ -20,9 +22,9 @@ This project is a Next.js application integrated with Tailwind CSS and Firebase,
 
 ## Features
 
-- **Next.js**: A React framework for building server-side rendered applications.
-- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
-- **Firebase**: A platform for building web and mobile applications, providing services like authentication and Firestore.
+-   **Next.js**: A React framework for building server-side rendered applications.
+-   **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
+-   **Firebase**: A platform for building web and mobile applications, providing services like authentication and Firestore.
 
 ## Project Structure
 
@@ -59,35 +61,35 @@ nextjs-firebase-app
 
 1. **Clone the repository**:
 
-   ```bash
-   git clone <repository-url>
-   cd nextjs-firebase-app
-   ```
+    ```bash
+    git clone <repository-url>
+    cd nextjs-firebase-app
+    ```
 
 2. **Install dependencies**:
 
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 
 3. **Configure Firebase**:
 
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
-   - Add your Firebase configuration to `src/config/firebase.ts`.
+    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
+    - Add your Firebase configuration to `src/config/firebase.ts`.
 
 4. **Run the development server**:
 
-   ```bash
-   npm run dev
-   ```
+    ```bash
+    npm run dev
+    ```
 
 5. **Open your browser**:
    Navigate to `http://localhost:3000` to view the application.
 
 ## Usage
 
-- The application provides authentication features through the `AuthProvider` component.
-- You can create and manage dynamic content using Firebase services.
+-   The application provides authentication features through the `AuthProvider` component.
+-   You can create and manage dynamic content using Firebase services.
 
 ## Contributing
 
