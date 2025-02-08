@@ -10,7 +10,7 @@ export default function PageView({
 	return (
 		<div
 			className={
-				"w-full h-full flex flex-col justify-start pt-24 " + className
+				"w-full h-full flex flex-col justify-start pt-32 " + className
 			}
 		>
 			{title && (
