@@ -39,8 +39,8 @@ interface MapProps {
 }
 
 const Map: React.FC<MapProps> = ({
-	initialCenter = [51.505, -0.09],
-	zoom = 13,
+	initialCenter = [51.42595, -0.56521], // Egham, UK
+	zoom = 16,
 	selectedMarkers = markers,
 }) => {
 	useEffect(() => {
