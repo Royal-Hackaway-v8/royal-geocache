@@ -29,6 +29,7 @@ function NavMenuLink({ href, label, className }: NavMenuLinkProps) {
 		</Link>
 	);
 }
+
 export default function NavMenu() {
 	const { user, signOutUser, loading } = useAuth();
 	const [mounted, setMounted] = useState(false);
@@ -72,9 +73,7 @@ export default function NavMenu() {
 					</>
 				)}
 
-				{!user && !loading && (
-					<NavMenuLink href="/login" label="Sign In" />
-				)}
+				<NavMenuLink href="/login" label="Sign In" />
 			</div>
 		</nav>
 	);
