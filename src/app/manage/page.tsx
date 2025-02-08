@@ -61,13 +61,34 @@ export default function ManagePage() {
 			// Update an existing cache
 			const cacheRef = ref(DB, `caches/${editingId}`);
 			await update(cacheRef, cacheData);
+
+			// Update state optimistically
+			setCaches((prev) =>
+				prev.map((cache) =>
+					cache.id === editingId ? { ...cache, ...cacheData } : cache
+				)
+			);
+
 			setEditingId(null);
 		} else {
 			// Create a new cache
 			const cachesRef = ref(DB, "caches/");
 			const newCacheRef = push(cachesRef);
 			await set(newCacheRef, cacheData);
+
+			// Ensure id is always a string
+			const newCacheId = newCacheRef.key ?? crypto.randomUUID();
+
+			// Optimistically update state, avoiding duplicates
+			setCaches((prev) => {
+				if (!prev.some((cache) => cache.id === newCacheId)) {
+					return [...prev, { id: newCacheId, ...cacheData }];
+				}
+				return prev; // Prevent duplicate insertion
+			});
 		}
+
+		// Reset form
 		setFormData({ name: "", description: "", lat: "", lng: "" });
 	};
 
