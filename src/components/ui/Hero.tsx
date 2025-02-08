@@ -29,7 +29,7 @@ const position: LatLngExpression = [51.505, -0.09];
 
 const Hero: React.FC = () => {
 	return (
-		<div className="bg-black h-screen w-screen flex justify-center items-center">
+		<div className="bg-black h-full w-full flex justify-center items-center">
 			<MapContainer
 				center={position}
 				zoom={13}
