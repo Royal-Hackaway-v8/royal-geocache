@@ -7,6 +7,7 @@ import Link from "next/link";
 export default function Home() {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isPlaying, setIsPlaying] = useState(true);
+	const [isFading, setIsFading] = useState(false);
 
 	useEffect(() => {
 		const video = videoRef.current;
@@ -25,6 +26,19 @@ export default function Home() {
 					});
 			}
 
+			// Listen for when the video ends to handle fade transition
+			const handleEnded = () => {
+				setIsFading(true);
+				// Wait for fade-out duration (500ms)
+				setTimeout(() => {
+					video.currentTime = 0;
+					video.play();
+					setIsFading(false);
+				}, 500);
+			};
+
+			video.addEventListener("ended", handleEnded);
+
 			const handlePlay = () => setIsPlaying(true);
 			const handlePause = () => setIsPlaying(false);
 
@@ -32,6 +46,7 @@ export default function Home() {
 			video.addEventListener("pause", handlePause);
 
 			return () => {
+				video.removeEventListener("ended", handleEnded);
 				video.removeEventListener("play", handlePlay);
 				video.removeEventListener("pause", handlePause);
 			};
@@ -40,19 +55,22 @@ export default function Home() {
 
 	return (
 		<PageView>
-			{/* Background Video */}
-			<video
-				autoPlay
-				loop
-				muted
-				playsInline
-				preload="auto"
-				ref={videoRef}
-				className="fixed top-0 left-0 w-screen h-screen object-cover"
-			>
-				<source src="/video/hero.mp4" type="video/mp4" />
-				Your browser doesn't support the video tag.
-			</video>
+			{/* Video Container with a black background */}
+			<div className="fixed top-0 left-0 w-screen h-screen bg-black">
+				<video
+					autoPlay
+					muted
+					playsInline
+					preload="auto"
+					ref={videoRef}
+					className={`w-full h-full object-cover transition-opacity duration-500 ${
+						isFading ? "opacity-0" : "opacity-100"
+					}`}
+				>
+					<source src="/video/hero_hd.mp4" type="video/mp4" />
+					Your browser doesn't support the video tag.
+				</video>
+			</div>
 
 			{/* Overlay Content */}
 			<div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center text-white text-center bg-black/40">
