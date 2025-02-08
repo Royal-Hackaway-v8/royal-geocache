@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import PageView from "@/components/ui/PageView";
+import { FaGoogle } from "react-icons/fa";
 
 export default function AuthPage() {
 	// Mode can be "signin" or "signup"
@@ -44,10 +45,15 @@ export default function AuthPage() {
 		setError(null);
 		try {
 			const provider = new GoogleAuthProvider();
-			const result = await signInWithPopup(AUTH, provider);
+			await signInWithPopup(AUTH, provider);
 			router.push("/manage");
 		} catch (err: any) {
-			setError(err.message);
+			if (err.code === "auth/popup-closed-by-user") {
+				console.log("Popup closed by user.  Returning to sign-in.");
+			} else {
+				console.error("Google Sign-In Error:", error);
+				setError(err.message);
+			}
 		}
 	};
 
@@ -124,8 +130,9 @@ export default function AuthPage() {
 				<button
 					type="button"
 					onClick={handleGoogleSignIn}
-					className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full backdrop-blur-md shadow-xl"
+					className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center justify-center"
 				>
+					<FaGoogle className="h-5 w-5 mr-2" />
 					Sign In with Google
 				</button>
 			</div>
