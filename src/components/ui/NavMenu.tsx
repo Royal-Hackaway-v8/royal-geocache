@@ -20,7 +20,7 @@ function NavMenuLink({ href, label, className }: NavMenuLinkProps) {
 			<div
 				className={`${className} p-2 px-4 rounded-full cursor-pointer transition duration-300 ${
 					isActive
-						? "bg-white/70 text-black"
+						? "bg-white/70 text-green-400"
 						: "text-white hover:bg-white/20"
 				}`}
 			>
@@ -40,7 +40,7 @@ export default function NavMenu() {
 
 	return (
 		<nav className="fixed top-4 w-full flex justify-center z-50 pointer-events-none">
-			<div className="w-fit bg-black/20 backdrop-blur-lg flex gap-2 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
+			<div className="w-fit bg-black text-white backdrop-blur-lg flex gap-2 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
 				<NavMenuLink
 					href="/"
 					label="Royal Geocache"
@@ -49,6 +49,7 @@ export default function NavMenu() {
 				<NavMenuLink href="/caches" label="Caches" />
 				<NavMenuLink href="/map" label="Map" />
 				<NavMenuLink href="/about" label="About" />
+				<NavMenuLink href="/manage" label="Manage" />
 
 				{user && (
 					<>

@@ -7,3 +7,13 @@ export interface AuthUser {
 	email: Nullable<string>;
 	photoURL: Nullable<string>;
 }
+
+// Geocache item type
+export interface Cache {
+	id: string;
+	name: string;
+	description: string;
+	lat: number;
+	lng: number;
+	createdAt: number;
+}
