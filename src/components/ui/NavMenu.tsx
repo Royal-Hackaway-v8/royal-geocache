@@ -42,7 +42,7 @@ export default function NavMenu() {
 			<div className="w-fit bg-black/20 backdrop-blur-lg flex gap-2 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
 				<NavMenuLink
 					href="/"
-					label="Oaxaca"
+					label="Royal Geocache"
 					className="rock-font font-normal"
 				/>
 				<NavMenuLink
@@ -53,6 +53,7 @@ export default function NavMenu() {
 						</div>
 					}
 				/>
+				<NavMenuLink href="/map" label="Map" />
 				<NavMenuLink href="/about" label="About" />
 
 				{user && (
