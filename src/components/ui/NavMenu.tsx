@@ -43,7 +43,7 @@ export default function NavMenu() {
 			<div className="w-fit bg-black text-white backdrop-blur-lg flex gap-2 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
 				<NavMenuLink
 					href="/"
-					label="Royal Geocache"
+					label="CacheGrab"
 					className="rock-font font-normal"
 				/>
 				<NavMenuLink href="/caches" label="Caches" />
