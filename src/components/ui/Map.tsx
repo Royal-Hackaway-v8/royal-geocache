@@ -1,5 +1,8 @@
 "use client";
-// types/map.ts
+import React, { useEffect } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
 export interface MarkerLocation {
 	id: string;
 	name: string;
@@ -29,13 +32,6 @@ export const markers: MarkerLocation[] = [
 	},
 ];
 
-// components/Map.tsx
-
-import React, { useEffect } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { FaMapMarkerAlt } from "react-icons/fa";
-
 interface MapProps {
 	initialCenter?: [number, number];
 	zoom?: number;
@@ -45,10 +41,24 @@ interface MapProps {
 const Map: React.FC<MapProps> = ({
 	initialCenter = [51.505, -0.09],
 	zoom = 13,
-	selectedMarkers = markers, // Use all markers by default
+	selectedMarkers = markers,
 }) => {
 	useEffect(() => {
-		// Set default icon options
+		// Define the SVG for the marker (based on FontAwesome's FaMapMarkerAlt)
+		const iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="red" width="30" height="30">
+        <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
+      </svg>
+    `;
+		// Create a data URL for the icon
+		const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
+
+		// Create a custom Leaflet icon using the data URL
+		const customIcon = L.icon({
+			iconUrl,
+			iconSize: [30, 30],
+			iconAnchor: [15, 30],
+		});
 
 		// Initialize map
 		const map = L.map("map").setView(initialCenter, zoom);
@@ -59,7 +69,7 @@ const Map: React.FC<MapProps> = ({
 			attribution: "© OpenStreetMap contributors",
 		}).addTo(map);
 
-		// Add markers
+		// Add markers with the custom icon
 		selectedMarkers.forEach((marker) => {
 			const { position, name, description } = marker;
 			const popupContent = `
@@ -68,8 +78,9 @@ const Map: React.FC<MapProps> = ({
           ${description ? `<p>${description}</p>` : ""}
         </div>
       `;
-
-			L.marker(position).addTo(map).bindPopup(popupContent);
+			L.marker(position, { icon: customIcon })
+				.addTo(map)
+				.bindPopup(popupContent);
 		});
 
 		// Cleanup on unmount
