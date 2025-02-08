@@ -1,5 +1,3 @@
-import Hero from "../components/ui/Hero";
-
 const Home = () => {
 	return (
 		<div className="flex flex-col items-center justify-center h-screen w-scrren bg-gray-100">
