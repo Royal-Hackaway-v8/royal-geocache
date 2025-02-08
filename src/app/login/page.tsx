@@ -89,7 +89,7 @@ export default function AuthPage() {
 				{/* Auth Form */}
 				<form
 					onSubmit={handleSubmit}
-					className="bg-white/50 p-6 rounded-3xl w-96 backdrop-blur-md shadow-xl"
+					className="bg-white p-6 rounded-3xl w-96 shadow-xl"
 				>
 					{error && <p className="text-red-500 mb-2">{error}</p>}
 					<div className="mb-4">
