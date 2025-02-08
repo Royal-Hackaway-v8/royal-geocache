@@ -1,20 +1,31 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PageView from "@/components/ui/PageView";
-import { DB } from "@/config/firebase";
-import { ref, onValue, push, set, update, remove } from "firebase/database";
 import { Cache } from "@/types";
+import {
+	subscribeToCaches,
+	createCache,
+	updateCache,
+	deleteCache,
+} from "@/services/cacheService";
 
-// Convert Blob to Base64 (returns full data URL)
-const blobToBase64 = (blob: Blob): Promise<string> => {
-	return new Promise((resolve, reject) => {
+// Assume blobToBase64 is defined elsewhere or in this file
+const blobToBase64 = (blob: Blob): Promise<string> =>
+	new Promise((resolve, reject) => {
 		const reader = new FileReader();
 		reader.onloadend = () => resolve(reader.result as string);
 		reader.onerror = reject;
 		reader.readAsDataURL(blob);
 	});
-};
+
+// New interface for form input state
+interface CacheFormInput {
+	name: string;
+	description: string;
+	lat: string;
+	lng: string;
+}
 
 // Audio Recorder Component
 const AudioRecorder = ({
@@ -122,8 +133,8 @@ const CacheForm = ({
 	editing,
 	cancelEdit,
 }: {
-	formData: any;
-	setFormData: React.Dispatch<React.SetStateAction<any>>;
+	formData: CacheFormInput;
+	setFormData: React.Dispatch<React.SetStateAction<CacheFormInput>>;
 	handleSubmit: (e: React.FormEvent) => void;
 	handleFillLocation: () => void;
 	setImageBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
@@ -355,10 +366,10 @@ const CacheList = ({
 	);
 };
 
-// ManagePage (Main Component)
+// ManagePage
 export default function ManagePage() {
 	const [caches, setCaches] = useState<Cache[]>([]);
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<CacheFormInput>({
 		name: "",
 		description: "",
 		lat: "",
@@ -368,42 +379,39 @@ export default function ManagePage() {
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 	const [editingCacheId, setEditingCacheId] = useState<string | null>(null);
 
+	// Subscribe to caches on component mount
 	useEffect(() => {
-		const cachesRef = ref(DB, "caches/");
-		const unsubscribe = onValue(cachesRef, (snapshot) => {
-			const data = snapshot.val();
-			if (data) {
-				setCaches(
-					Object.entries(data).map(([id, cache]) => ({
-						...(cache as Cache),
-						id,
-					}))
-				);
-			} else {
-				setCaches([]);
-			}
-		});
+		const unsubscribe = subscribeToCaches((caches) => setCaches(caches));
 		return () => unsubscribe();
 	}, []);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const cacheData = {
-			...formData,
+
+		// Explicitly define the cacheData object
+		const cacheData: Partial<Cache> = {
+			name: formData.name,
+			description: formData.description,
 			lat: parseFloat(formData.lat),
 			lng: parseFloat(formData.lng),
-			...(imageBlob ? { image: await blobToBase64(imageBlob) } : {}),
-			...(audioBlob ? { audio: await blobToBase64(audioBlob) } : {}),
+			createdAt: Date.now(),
 		};
 
+		// Add optional fields (image/audio) if available
+		if (imageBlob) {
+			cacheData.image = await blobToBase64(imageBlob);
+		}
+		if (audioBlob) {
+			cacheData.audio = await blobToBase64(audioBlob);
+		}
+
 		if (editingCacheId) {
-			// Update existing cache
-			await update(ref(DB, `caches/${editingCacheId}`), cacheData);
+			await updateCache(editingCacheId, cacheData);
 			setEditingCacheId(null);
 		} else {
-			// Add new cache
-			await set(push(ref(DB, "caches/")), cacheData);
+			await createCache(cacheData as Omit<Cache, "id">);
 		}
+
 		// Reset form
 		setFormData({ name: "", description: "", lat: "", lng: "" });
 		setImageBlob(null);
@@ -445,7 +453,7 @@ export default function ManagePage() {
 
 	const handleDelete = async (id: string) => {
 		if (confirm("Are you sure you want to delete this cache?")) {
-			await remove(ref(DB, `caches/${id}`));
+			await deleteCache(id);
 			if (editingCacheId === id) {
 				cancelEdit();
 			}
