@@ -6,7 +6,7 @@ import {
 	signInWithEmailAndPassword,
 	createUserWithEmailAndPassword,
 	GoogleAuthProvider,
-	signInWithCredential,
+	signInWithPopup,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
@@ -44,7 +44,7 @@ export default function AuthPage() {
 		setError(null);
 		try {
 			const provider = new GoogleAuthProvider();
-			await signInWithCredential(AUTH, provider);
+			const result = await signInWithPopup(AUTH, provider);
 			router.push("/manage");
 		} catch (err: any) {
 			setError(err.message);
@@ -121,6 +121,13 @@ export default function AuthPage() {
 						{mode === "signin" ? "Sign In" : "Sign Up"}
 					</button>
 				</form>
+				<button
+					type="button"
+					onClick={handleGoogleSignIn}
+					className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full backdrop-blur-md shadow-xl"
+				>
+					Sign In with Google
+				</button>
 			</div>
 		</PageView>
 	);
