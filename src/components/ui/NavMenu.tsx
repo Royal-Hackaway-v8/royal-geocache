@@ -46,14 +46,7 @@ export default function NavMenu() {
 					label="Royal Geocache"
 					className="rock-font font-normal"
 				/>
-				<NavMenuLink
-					href="/order"
-					label={
-						<div className="flex items-center">
-							<span>Your Order</span>
-						</div>
-					}
-				/>
+				<NavMenuLink href="/caches" label="Caches" />
 				<NavMenuLink href="/map" label="Map" />
 				<NavMenuLink href="/about" label="About" />
 

@@ -5,10 +5,12 @@ import { AUTH } from "../../config/firebase";
 import {
 	signInWithEmailAndPassword,
 	createUserWithEmailAndPassword,
+	GoogleAuthProvider,
+	signInWithCredential,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import PageView from "@/src/components/ui/PageView";
+import PageView from "@/components/ui/PageView";
 
 export default function AuthPage() {
 	// Mode can be "signin" or "signup"
@@ -33,6 +35,16 @@ export default function AuthPage() {
 			} else {
 				await createUserWithEmailAndPassword(AUTH, email, password);
 			}
+			router.push("/manage");
+		} catch (err: any) {
+			setError(err.message);
+		}
+	};
+	const handleGoogleSignIn = async () => {
+		setError(null);
+		try {
+			const provider = new GoogleAuthProvider();
+			await signInWithCredential(AUTH, provider);
 			router.push("/manage");
 		} catch (err: any) {
 			setError(err.message);

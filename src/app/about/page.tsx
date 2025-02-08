@@ -1,3 +1,5 @@
+import PageView from "@/components/ui/PageView";
+
 export default function AboutPage() {
-	return <h1>About</h1>;
+	return <PageView title="About">About</PageView>;
 }
