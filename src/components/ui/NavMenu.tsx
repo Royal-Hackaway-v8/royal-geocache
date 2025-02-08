@@ -4,26 +4,37 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
+import {
+	FaHome,
+	FaMap,
+	FaInfoCircle,
+	FaCog,
+	FaDatabase,
+	FaSignInAlt,
+	FaSignOutAlt,
+} from "react-icons/fa";
 
 interface NavMenuLinkProps {
 	href: string;
 	label: React.ReactNode;
+	icon?: React.ReactNode; // Add an optional icon prop
 	className?: string;
 }
 
-function NavMenuLink({ href, label, className }: NavMenuLinkProps) {
+function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 	const pathname = usePathname();
 	const isActive = pathname === href;
 
 	return (
 		<Link href={href}>
 			<div
-				className={`${className} p-2 px-4 rounded-full cursor-pointer transition duration-300 ${
+				className={`${className} px-3 py-2 rounded-full cursor-pointer transition duration-300 flex items-center gap-2 ${
 					isActive
 						? "bg-white/70 text-green-400"
 						: "text-white hover:bg-white/20"
 				}`}
 			>
+				{icon} {/* Render the icon */}
 				{label}
 			</div>
 		</Link>
@@ -40,34 +51,59 @@ export default function NavMenu() {
 
 	return (
 		<nav className="fixed top-4 w-full flex justify-center z-50 pointer-events-none">
-			<div className="w-fit bg-black text-white backdrop-blur-lg flex gap-2 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
+			<div className="w-fit bg-black text-white backdrop-blur-lg flex gap-1 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
 				<NavMenuLink
 					href="/"
 					label="CacheGrab"
+					icon={<FaHome />} // Add an icon
 					className="rock-font font-normal"
 				/>
-				<NavMenuLink href="/caches" label="Caches" />
-				<NavMenuLink href="/map" label="Map" />
-				<NavMenuLink href="/about" label="About" />
-				<NavMenuLink href="/manage" label="Manage" />
+				<NavMenuLink
+					href="/caches"
+					label="Caches"
+					icon={<FaDatabase />}
+				/>
+				<NavMenuLink href="/map" label="Map" icon={<FaMap />} />
+				<NavMenuLink
+					href="/about"
+					label="About"
+					icon={<FaInfoCircle />}
+				/>
+				<NavMenuLink href="/manage" label="Manage" icon={<FaCog />} />
 
 				{user && (
 					<>
-						<NavMenuLink href="/manage" label="Manage DB" />
-						<NavMenuLink href="/read" label="Read from DB" />
-						<NavMenuLink href="/write" label="Write to DB" />
+						<NavMenuLink
+							href="/manage"
+							label="Manage DB"
+							icon={<FaCog />}
+						/>
+						<NavMenuLink
+							href="/read"
+							label="Read from DB"
+							icon={<FaDatabase />}
+						/>
+						<NavMenuLink
+							href="/write"
+							label="Write to DB"
+							icon={<FaDatabase />}
+						/>
 
 						<button
 							onClick={signOutUser}
-							className="px-4 py-1 bg-red-500 text-white rounded-full shadow-xl cursor-pointer transition-colors hover:bg-red-600 disabled:opacity-50"
+							className="px-4 py-1 bg-red-500 text-white rounded-full shadow-xl cursor-pointer transition-colors hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
 							disabled={loading}
 						>
-							Sign Out
+							<FaSignOutAlt /> Sign Out
 						</button>
 					</>
 				)}
 
-				<NavMenuLink href="/login" label="Sign In" />
+				<NavMenuLink
+					href="/login"
+					label="Sign In"
+					icon={<FaSignInAlt />}
+				/>
 			</div>
 		</nav>
 	);
