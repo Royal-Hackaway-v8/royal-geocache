@@ -231,6 +231,21 @@ const CacheList = ({
 		src: string;
 	} | null>(null);
 
+	// Format timestamp function
+	const formatTimestamp = (timestamp: string | number | Date) => {
+		if (!timestamp) return "Unknown date";
+		const date = new Date(timestamp);
+		return new Intl.DateTimeFormat("en-US", {
+			year: "numeric",
+			month: "short",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: true,
+		}).format(date);
+	};
+
 	// Simply set modal content to the stored data URL
 	const handleOpenModal = (type: "image" | "audio", dataUrl: string) => {
 		setModalContent({ type, src: dataUrl });
@@ -254,6 +269,9 @@ const CacheList = ({
 					<p>
 						<span>Lat: {cache.lat}</span>,{" "}
 						<span>Lng: {cache.lng}</span>
+					</p>
+					<p className="text-gray-600 text-sm">
+						Created: {formatTimestamp(cache.createdAt)}
 					</p>
 
 					{/* Clickable image preview */}
