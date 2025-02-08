@@ -76,35 +76,6 @@ export default function NavMenu() {
 					label="Profile"
 					icon={<FaPortrait />}
 				/>
-
-				{user && (
-					<>
-						<NavMenuLink
-							href="/manage"
-							label="Manage DB"
-							icon={<FaCog />}
-						/>
-						<NavMenuLink
-							href="/read"
-							label="Read from DB"
-							icon={<FaDatabase />}
-						/>
-						<NavMenuLink
-							href="/write"
-							label="Write to DB"
-							icon={<FaDatabase />}
-						/>
-
-						<button
-							onClick={signOutUser}
-							className="px-4 py-1 bg-red-500 text-white rounded-full shadow-xl cursor-pointer transition-colors hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
-							disabled={loading}
-						>
-							<FaSignOutAlt /> Sign Out
-						</button>
-					</>
-				)}
-
 				<NavMenuLink
 					href="/login"
 					label="Sign In"
