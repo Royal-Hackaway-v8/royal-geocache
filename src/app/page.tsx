@@ -18,7 +18,6 @@ export default function Home() {
 				playPromise
 					.then(() => {
 						setIsPlaying(true);
-						console.log("Video is playing");
 					})
 					.catch((error) => {
 						console.error("Autoplay failed:", error);
