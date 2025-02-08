@@ -19,20 +19,32 @@ export default function AuthPage() {
 	const [mode, setMode] = useState<"signin" | "signup">("signin");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const { user } = useAuth();
+	const { user, handleSignOut } = useAuth();
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 
-	// Redirect if user is already signed in
+	// If user is signed in, show the profile view with a sign out button
 	if (user) {
-		router.push("/profile");
+		return (
+			<PageView title="Profile">
+				<div className="flex flex-col items-center space-y-4">
+					<p>Welcome, {user.displayName || user.email}!</p>
+					<button
+						type="button"
+						onClick={handleSignOut}
+						className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
+					>
+						Sign Out
+					</button>
+				</div>
+			</PageView>
+		);
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null);
 		try {
-			// In your sign-up branch of handleSubmit:
 			if (mode === "signin") {
 				await signInWithEmailAndPassword(AUTH, email, password);
 			} else {
@@ -41,7 +53,6 @@ export default function AuthPage() {
 					email,
 					password
 				);
-				// Use the returned auth user to set up app-specific data
 				await createOrUpdateUser({
 					uid: userCredential.user.uid,
 					displayName: userCredential.user.displayName,
@@ -60,7 +71,6 @@ export default function AuthPage() {
 		try {
 			const provider = new GoogleAuthProvider();
 			const result = await signInWithPopup(AUTH, provider);
-			// Create or update user record in RTDB
 			await createOrUpdateUser({
 				uid: result.user.uid,
 				displayName: result.user.displayName,

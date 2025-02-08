@@ -1,3 +1,4 @@
+import { AuthProvider } from "@/context/AuthContext";
 import NavMenu from "../components/ui/NavMenu";
 import "./globals.css";
 
@@ -13,18 +14,18 @@ export const metadata = {
 
 export default function RootLayout({
 	children,
-}: Readonly<{
+}: {
 	children: React.ReactNode;
-}>) {
+}) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className="gradient-background">
-				<main className="min-h-screen flex flex-col">
-					<NavMenu />
-
-					{/* Main Content */}
-					<div>{children}</div>
-				</main>
+				<AuthProvider>
+					<main className="min-h-screen flex flex-col">
+						<NavMenu />
+						<div>{children}</div>
+					</main>
+				</AuthProvider>
 			</body>
 		</html>
 	);
