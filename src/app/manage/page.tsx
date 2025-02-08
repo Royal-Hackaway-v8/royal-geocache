@@ -69,7 +69,7 @@ const AudioRecorder = ({
 				<button
 					type="button"
 					onClick={startRecording}
-					className="w-full bg-green-500 text-white p-2 rounded"
+					className="w-full bg-green-500 text-white p-2 rounded-full shadow-md"
 				>
 					Start Recording
 				</button>
@@ -77,7 +77,7 @@ const AudioRecorder = ({
 				<button
 					type="button"
 					onClick={stopRecording}
-					className="w-full bg-red-500 text-white p-2 rounded"
+					className="w-full bg-red-500 text-white p-2 rounded-full shadow-md"
 				>
 					Stop Recording
 				</button>
@@ -105,7 +105,7 @@ const ImageUploader = ({
 				type="file"
 				accept="image/*"
 				onChange={handleImageChange}
-				className="w-full border p-2 rounded"
+				className="w-full border p-2 rounded-full shadow-md"
 			/>
 		</div>
 	);
@@ -140,7 +140,7 @@ const CacheForm = ({
 	return (
 		<form
 			onSubmit={handleSubmit}
-			className="mb-8 p-4 bg-white rounded shadow"
+			className="mb-8 p-4 bg-white rounded-2xl shadow-lg"
 		>
 			<h2 className="text-xl font-bold mb-4">
 				{editing ? "Edit Cache" : "Add Cache"}
@@ -186,7 +186,7 @@ const CacheForm = ({
 			<button
 				type="button"
 				onClick={handleFillLocation}
-				className="w-full bg-gray-300 text-black p-2 rounded mb-4"
+				className="w-full bg-gray-300 text-black p-2 rounded-full shadow-md mb-4"
 			>
 				Use My Location
 			</button>
@@ -197,7 +197,7 @@ const CacheForm = ({
 			<div className="flex space-x-2">
 				<button
 					type="submit"
-					className="w-full bg-blue-500 text-white p-2 rounded"
+					className="w-full bg-blue-500 text-white p-2 rounded-full shadow-md"
 				>
 					{editing ? "Update Cache" : "Save Cache"}
 				</button>
@@ -247,7 +247,7 @@ const CacheList = ({
 			{caches.map((cache) => (
 				<div
 					key={cache.id}
-					className="p-4 mb-4 bg-gray-100 rounded shadow"
+					className="p-4 mb-4 bg-gray-100 rounded-2xl shadow-lg"
 				>
 					<h3 className="text-lg font-semibold">{cache.name}</h3>
 					<p>{cache.description}</p>
@@ -278,29 +278,21 @@ const CacheList = ({
 							<audio
 								controls
 								src={cache.audio}
-								className="w-full"
+								className="w-full rounded-full shadow-md"
 							/>
-							<button
-								onClick={() =>
-									handleOpenModal("audio", cache.audio!)
-								}
-								className="mt-2 bg-blue-500 text-white p-1 rounded"
-							>
-								View Audio
-							</button>
 						</div>
 					)}
 
 					<div className="mt-2 flex space-x-2">
 						<button
 							onClick={() => onEdit(cache)}
-							className="bg-yellow-500 text-white p-1 rounded"
+							className="bg-yellow-500 text-white px-4 py-2 rounded-full shadow-md"
 						>
 							Edit
 						</button>
 						<button
 							onClick={() => onDelete(cache.id)}
-							className="bg-red-500 text-white p-1 rounded"
+							className="bg-red-500 text-white px-4 py-2 rounded-full shadow-md"
 						>
 							Delete
 						</button>
