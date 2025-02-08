@@ -5,22 +5,25 @@ import "leaflet/dist/leaflet.css";
 import React from "react";
 import { LatLngExpression } from "leaflet";
 
-// Dynamically import react-leaflet components to prevent SSR issues
+// Ensure `react-leaflet` components are imported correctly
 const MapContainer = dynamic(
 	() => import("react-leaflet").then((mod) => mod.MapContainer),
 	{ ssr: false }
-);
+) as unknown as React.FC<import("react-leaflet").MapContainerProps>;
+
 const TileLayer = dynamic(
 	() => import("react-leaflet").then((mod) => mod.TileLayer),
 	{ ssr: false }
-);
+) as unknown as React.FC<import("react-leaflet").TileLayerProps>;
+
 const Marker = dynamic(
 	() => import("react-leaflet").then((mod) => mod.Marker),
 	{ ssr: false }
-);
+) as unknown as React.FC<import("react-leaflet").MarkerProps>;
+
 const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
 	ssr: false,
-});
+}) as unknown as React.FC<import("react-leaflet").PopupProps>;
 
 const position: LatLngExpression = [51.505, -0.09];
 
