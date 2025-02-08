@@ -26,7 +26,7 @@ chicken nuggets
 
 -   Allow users to toggle dark mode, notification settings, etc.
 
-[text](https://prod.liveshare.vsengsaas.visualstudio.com/join?86AF78EED6761BC3EEA082BE75560A0FEBF2)
+[???](https://prod.liveshare.vsengsaas.visualstudio.com/join?BBD4866F76720B13BB692692269661D6CCD5)
 
 bigger hairy sweaty balls on feet covered in mushrooms
 
