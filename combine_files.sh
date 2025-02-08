@@ -16,6 +16,7 @@ add_separator() {
 # Corrected find command to properly exclude directories and files
 find . \( \
     -path "./node_modules" -o \
+    -path "./public" -o \
     -path "./.next" -o \
     -path "./.git" -o \
     -path "./node_modules/*" -o \
@@ -37,6 +38,7 @@ find . \( \
     ! -name ".prettierrc.*" \
     ! -name "combine_files.sh" \
     ! -name "combined_files.txt" \
+    ! -name "LICENSE" \
     ! -name "*.json" -o -name "package.json" \
 \) -print | while read -r file; do
 # Log the file being processed
