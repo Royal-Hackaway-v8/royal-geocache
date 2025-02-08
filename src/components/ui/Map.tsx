@@ -59,7 +59,7 @@ const Map: React.FC<MapProps> = ({
 		};
 	}, [center, zoom, markers]);
 
-	return <div id="map" className="h-96 w-full" />;
+	return <div id="map" className="h-full w-full" />;
 };
 
 export default Map;

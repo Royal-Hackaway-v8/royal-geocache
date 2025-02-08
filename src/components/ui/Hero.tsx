@@ -3,8 +3,10 @@ import Map from "./Map";
 
 const Hero = () => {
 	return (
-		<div className=" h-screen flex flex-col justify-center items-center w-screen">
-			<Map />
+		<div className="w-screen h-screen  flex flex-col justify-center items-center">
+			<div className=" m-28 h-full w-full flex flex-col justify-center items-center ">
+				<Map />
+			</div>
 		</div>
 	);
 };
