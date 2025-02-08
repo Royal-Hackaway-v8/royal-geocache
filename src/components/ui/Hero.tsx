@@ -40,10 +40,7 @@ const Hero = ({ center = [51.505, -0.09], zoom = 13, markers = [] }) => {
 		};
 	}, [center, zoom, markers]);
 
-	return (
-	<div id="map" className="h-screen w-full" > 
-	 </div>;
-	 );
+	return <div id="map" className="h-screen w-full" />;
 };
 
 export default Hero;
