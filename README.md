@@ -26,7 +26,8 @@ chicken nuggets
 
 -   Allow users to toggle dark mode, notification settings, etc.
 
-](https://prod.liveshare.vsengsaas.visualstudio.com/join?92239E180D93B122691A3042C6D5DD47ABA6)
+[text](https://prod.liveshare.vsengsaas.visualstudio.com/join?86620373EBAD3AE2BEBA7E451B22F5957F15)
+
 bigger hairy sweaty balls on feet covered in mushrooms
 
 # nextjs-firebase-app
