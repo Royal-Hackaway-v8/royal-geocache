@@ -2,9 +2,33 @@
 
 chicken nuggets
 
+/cache/[id] - Individual Cache Details
+
+-   View a single cache’s full details.
+-   Show the exact location on the map.
+-   Display images/audio if available.
+
+/profile - User Profile Page
+
+-   If you’re using authentication, allow users to see/edit their saved caches.
+-   Show caches a user has created.
+
+/leaderboard - Optional Gamification
+
+-   Rank users by caches found or created.
+-   Encourage engagement with a points system.
+
+/not-found - Custom 404 Page
+
+-   Display a custom error page for invalid routes.
+
+/settings - App Preferences
+
+-   Allow users to toggle dark mode, notification settings, etc.
+
 https://dfd8-92-40-171-176.ngrok-free.app
 
-[!!!](https://prod.liveshare.vsengsaas.visualstudio.com/join?660BC0B9A8D8D091F2A610EF558477F98367)
+[!!!](https://prod.liveshare.vsengsaas.visualstudio.com/join?452C1858ADDCF3A725AC937259F65A7321E4)
 
 bigger hairy sweaty balls on feet covered in mushrooms
 
