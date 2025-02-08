@@ -1,4 +1,3 @@
-// src/app/manage/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -42,6 +41,29 @@ export default function ManagePage() {
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 	) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
+	};
+
+	const handleFillLocation = () => {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					const { latitude, longitude } = position.coords;
+					setFormData((prev) => ({
+						...prev,
+						lat: latitude.toString(),
+						lng: longitude.toString(),
+					}));
+				},
+				(error) => {
+					console.error("Error getting location:", error);
+					alert(
+						"Failed to retrieve your location. Please try again."
+					);
+				}
+			);
+		} else {
+			alert("Geolocation is not supported by this browser.");
+		}
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -138,38 +160,50 @@ export default function ManagePage() {
 							placeholder="Cache description"
 						></textarea>
 					</div>
-					<div className="mb-4 flex space-x-4">
-						<div className="flex-1">
-							<label className="block mb-1">Latitude</label>
-							<input
-								type="number"
-								step="any"
-								name="lat"
-								value={formData.lat}
-								onChange={handleChange}
-								className="w-full border p-2 rounded"
-								placeholder="Latitude"
-							/>
-						</div>
-						<div className="flex-1">
-							<label className="block mb-1">Longitude</label>
-							<input
-								type="number"
-								step="any"
-								name="lng"
-								value={formData.lng}
-								onChange={handleChange}
-								className="w-full border p-2 rounded"
-								placeholder="Longitude"
-							/>
+					<div className="mb-4 flex flex-col space-y-4">
+						<div className="flex space-x-4">
+							<div className="flex-1">
+								<label className="block mb-1">Latitude</label>
+								<input
+									type="number"
+									step="any"
+									name="lat"
+									value={formData.lat}
+									onChange={handleChange}
+									className="w-full border p-2 rounded"
+									placeholder="Latitude"
+								/>
+							</div>
+							<div className="flex-1">
+								<label className="block mb-1">Longitude</label>
+								<input
+									type="number"
+									step="any"
+									name="lng"
+									value={formData.lng}
+									onChange={handleChange}
+									className="w-full border p-2 rounded"
+									placeholder="Longitude"
+								/>
+							</div>
 						</div>
 					</div>
-					<button
-						type="submit"
-						className="w-full bg-blue-500 text-white p-2 rounded"
-					>
-						{editingId ? "Update Cache" : "Add Cache"}
-					</button>
+
+					<div className="flex gap-2">
+						<button
+							type="button"
+							onClick={handleFillLocation}
+							className="w-full bg-gray-300 text-black p-2 rounded-full shadow-md hover:bg-gray-400 transition"
+						>
+							Use My Location
+						</button>
+						<button
+							type="submit"
+							className="w-full bg-blue-500 text-white p-2 rounded-full shadow-md"
+						>
+							{editingId ? "Update Cache" : "Add Cache"}
+						</button>
+					</div>
 				</form>
 
 				<div>
