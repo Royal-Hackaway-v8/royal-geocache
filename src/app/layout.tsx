@@ -19,7 +19,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`bg-background text-foreground bg-gradient-to-r from-blue-200 to-blue-600`}
+				className={`bg-background text-foreground bg-gradient-to-br from-green-200 to-green-600`}
 			>
 				<main className="min-h-screen flex flex-col">
 					<NavMenu />
