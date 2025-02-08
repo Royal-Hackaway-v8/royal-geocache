@@ -12,6 +12,7 @@ import {
 	FaDatabase,
 	FaSignInAlt,
 	FaSignOutAlt,
+	FaPortrait,
 } from "react-icons/fa";
 
 interface NavMenuLinkProps {
@@ -28,7 +29,7 @@ function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 	return (
 		<Link href={href}>
 			<div
-				className={`${className} px-3 py-2 rounded-full cursor-pointer transition duration-300 flex items-center gap-2 ${
+				className={`${className} px-3 py-2 rounded-full cursor-pointer transition duration-300 flex flex-col items-center gap-2 ${
 					isActive
 						? "bg-white/70 text-green-400"
 						: "text-white hover:bg-white/20"
@@ -70,6 +71,11 @@ export default function NavMenu() {
 					icon={<FaInfoCircle />}
 				/>
 				<NavMenuLink href="/manage" label="Manage" icon={<FaCog />} />
+				<NavMenuLink
+					href="/profile"
+					label="Profile"
+					icon={<FaPortrait />}
+				/>
 
 				{user && (
 					<>
