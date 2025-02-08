@@ -8,6 +8,15 @@ export interface AuthUser {
 	photoURL: Nullable<string>;
 }
 
+// Extended user interface for your app-specific data
+export interface AppUser extends AuthUser {
+	createdAt: number;
+	updatedAt?: number; // optional update timestamp
+	// Add any additional fields your app might need, e.g.:
+	// score?: number;
+	// preferences?: Record<string, any>;
+}
+
 // Geocache item type
 export interface Cache {
 	id: string;

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import PageView from "@/components/ui/PageView";
 import { FaGoogle } from "react-icons/fa";
+import { createOrUpdateUser } from "@/services/userService";
 
 export default function AuthPage() {
 	// Mode can be "signin" or "signup"
@@ -24,34 +25,54 @@ export default function AuthPage() {
 
 	// Redirect if user is already signed in
 	if (user) {
-		router.push("/manage");
+		router.push("/profile");
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null);
 		try {
+			// In your sign-up branch of handleSubmit:
 			if (mode === "signin") {
 				await signInWithEmailAndPassword(AUTH, email, password);
 			} else {
-				await createUserWithEmailAndPassword(AUTH, email, password);
+				const userCredential = await createUserWithEmailAndPassword(
+					AUTH,
+					email,
+					password
+				);
+				// Use the returned auth user to set up app-specific data
+				await createOrUpdateUser({
+					uid: userCredential.user.uid,
+					displayName: userCredential.user.displayName,
+					email: userCredential.user.email,
+					photoURL: userCredential.user.photoURL,
+				});
 			}
-			router.push("/manage");
+			router.push("/profile");
 		} catch (err: any) {
 			setError(err.message);
 		}
 	};
+
 	const handleGoogleSignIn = async () => {
 		setError(null);
 		try {
 			const provider = new GoogleAuthProvider();
-			await signInWithPopup(AUTH, provider);
-			router.push("/manage");
+			const result = await signInWithPopup(AUTH, provider);
+			// Create or update user record in RTDB
+			await createOrUpdateUser({
+				uid: result.user.uid,
+				displayName: result.user.displayName,
+				email: result.user.email,
+				photoURL: result.user.photoURL,
+			});
+			router.push("/profile");
 		} catch (err: any) {
 			if (err.code === "auth/popup-closed-by-user") {
-				console.log("Popup closed by user.  Returning to sign-in.");
+				console.log("Popup closed by user. Returning to sign-in.");
 			} else {
-				console.error("Google Sign-In Error:", error);
+				console.error("Google Sign-In Error:", err);
 				setError(err.message);
 			}
 		}
