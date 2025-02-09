@@ -2,17 +2,21 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import PageView from "@/components/ui/PageView";
-import { CacheGallery, Cache } from "@/types";
+import { CacheGallery, Cache, CacheGroup } from "@/types";
 import {
 	subscribeToCacheGalleries,
 	createCacheGallery,
 	updateCacheGallery,
 	deleteCacheGallery,
 	addCacheToGallery,
+	subscribeToCacheGroups,
+	updateCacheGroup,
+	createCacheGroup,
+	deleteCacheGroup,
 } from "@/services/cacheService";
 import { useAuth } from "@/context/AuthContext";
 
-// Convert blob to Base64 string
+// Convert a Blob to a Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -21,16 +25,15 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.readAsDataURL(blob);
 	});
 
-// Update interface to include gifUrl
+// Updated CacheFormInput with gifUrl field
 interface CacheFormInput {
 	name: string;
 	description: string;
 	lat: string;
 	lng: string;
-	gifUrl: string; // New field for GIF URL
+	gifUrl: string;
 }
 
-// Audio Recorder Component
 const AudioRecorder = ({
 	setAudioBlob,
 }: {
@@ -100,7 +103,6 @@ const AudioRecorder = ({
 	);
 };
 
-// Image Uploader Component
 const ImageUploader = ({
 	setImageBlob,
 }: {
@@ -125,7 +127,6 @@ const ImageUploader = ({
 	);
 };
 
-// Cache Gallery Form Component (for creating/updating a gallery)
 const CacheForm = ({
 	formData,
 	setFormData,
@@ -174,7 +175,6 @@ const CacheForm = ({
 				placeholder="Gallery description"
 				className="w-full border p-2 rounded mb-4"
 			></textarea>
-
 			<div className="flex space-x-4 mb-4">
 				<input
 					type="number"
@@ -195,7 +195,6 @@ const CacheForm = ({
 					className="w-full border p-2 rounded"
 				/>
 			</div>
-
 			<button
 				type="button"
 				onClick={handleFillLocation}
@@ -203,7 +202,6 @@ const CacheForm = ({
 			>
 				Use My Location
 			</button>
-
 			<input
 				type="text"
 				name="gifUrl"
@@ -212,10 +210,8 @@ const CacheForm = ({
 				placeholder="GIF URL"
 				className="w-full border p-2 rounded mb-4"
 			/>
-
 			<ImageUploader setImageBlob={setImageBlob} />
 			<AudioRecorder setAudioBlob={setAudioBlob} />
-
 			<div className="flex space-x-2">
 				<button
 					type="submit"
@@ -237,7 +233,6 @@ const CacheForm = ({
 	);
 };
 
-// Component for displaying cache galleries and offering edit, delete, and add-cache options
 const CacheList = ({
 	galleries,
 	onEdit,
@@ -294,8 +289,6 @@ const CacheList = ({
 					<p className="text-gray-600 text-sm">
 						Created: {formatTimestamp(gallery.createdAt)}
 					</p>
-
-					{/* Display Image Preview */}
 					{gallery.cacheList[0]?.image && (
 						<div
 							className="cursor-pointer hover:opacity-75 mb-2"
@@ -313,8 +306,6 @@ const CacheList = ({
 							/>
 						</div>
 					)}
-
-					{/* Display GIF Preview */}
 					{gallery.cacheList[0]?.gifUrl && (
 						<div
 							className="cursor-pointer hover:opacity-75 mb-2"
@@ -332,8 +323,6 @@ const CacheList = ({
 							/>
 						</div>
 					)}
-
-					{/* Display Audio if available */}
 					{gallery.cacheList[0]?.audio && (
 						<div className="mb-2">
 							<audio
@@ -343,7 +332,6 @@ const CacheList = ({
 							/>
 						</div>
 					)}
-
 					<div className="mt-2 flex space-x-2">
 						<button
 							onClick={() => onEdit(gallery)}
@@ -366,8 +354,6 @@ const CacheList = ({
 					</div>
 				</div>
 			))}
-
-			{/* Modal for viewing image/audio */}
 			{modalContent && (
 				<div
 					className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
@@ -404,7 +390,6 @@ const CacheList = ({
 	);
 };
 
-// Modal Component for adding an additional cache to a gallery
 const AddCacheModal = ({
 	gallery,
 	user,
@@ -418,8 +403,6 @@ const AddCacheModal = ({
 }) => {
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-
-	// New state for GIF URL input (string)
 	const [gifUrl, setGifUrl] = useState("");
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -434,7 +417,6 @@ const AddCacheModal = ({
 		if (audioBlob) {
 			newCacheData.audio = await blobToBase64(audioBlob);
 		}
-		// Only add gifUrl if provided
 		if (gifUrl.trim()) {
 			newCacheData.gifUrl = gifUrl.trim();
 		}
@@ -467,7 +449,6 @@ const AddCacheModal = ({
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<ImageUploader setImageBlob={setImageBlob} />
 					<AudioRecorder setAudioBlob={setAudioBlob} />
-					{/* New input for GIF URL */}
 					<div>
 						<label className="block mb-1">GIF URL</label>
 						<input
@@ -490,16 +471,169 @@ const AddCacheModal = ({
 	);
 };
 
-// ManagePage Component
+// ---------- Group Management Components ----------
+
+interface GroupFormInput {
+	name: string;
+	description: string;
+	groupList: string[]; // List of CacheGallery IDs
+}
+
+const GroupForm = ({
+	groupForm,
+	setGroupForm,
+	handleGroupSubmit,
+	editingGroup,
+	cancelGroupEdit,
+	galleries,
+}: {
+	groupForm: GroupFormInput;
+	setGroupForm: React.Dispatch<React.SetStateAction<GroupFormInput>>;
+	handleGroupSubmit: (e: React.FormEvent) => void;
+	editingGroup: string | null;
+	cancelGroupEdit: () => void;
+	galleries: CacheGallery[];
+}) => {
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+	) => {
+		setGroupForm({ ...groupForm, [e.target.name]: e.target.value });
+	};
+
+	const handleCheckboxChange = (galleryId: string) => {
+		if (groupForm.groupList.includes(galleryId)) {
+			setGroupForm({
+				...groupForm,
+				groupList: groupForm.groupList.filter((id) => id !== galleryId),
+			});
+		} else {
+			setGroupForm({
+				...groupForm,
+				groupList: [...groupForm.groupList, galleryId],
+			});
+		}
+	};
+
+	return (
+		<form
+			onSubmit={handleGroupSubmit}
+			className="mb-8 p-4 bg-white rounded-2xl shadow-lg"
+		>
+			<h2 className="text-xl font-bold mb-4">
+				{editingGroup ? "Edit Cache Group" : "Add Cache Group"}
+			</h2>
+			<input
+				type="text"
+				name="name"
+				value={groupForm.name}
+				onChange={handleChange}
+				placeholder="Group name"
+				className="w-full border p-2 rounded mb-4"
+			/>
+			<textarea
+				name="description"
+				value={groupForm.description}
+				onChange={handleChange}
+				placeholder="Group description"
+				className="w-full border p-2 rounded mb-4"
+			/>
+			<div className="mb-4">
+				<h3 className="font-bold mb-2">Select Galleries:</h3>
+				<div className="grid grid-cols-2 gap-2">
+					{galleries.map((gallery) => (
+						<label key={gallery.id} className="flex items-center">
+							<input
+								type="checkbox"
+								checked={groupForm.groupList.includes(
+									gallery.id
+								)}
+								onChange={() =>
+									handleCheckboxChange(gallery.id)
+								}
+								className="mr-2"
+							/>
+							{gallery.name}
+						</label>
+					))}
+				</div>
+			</div>
+			<div className="flex space-x-2">
+				<button
+					type="submit"
+					className="w-full bg-blue-500 text-white p-2 rounded-full shadow-md"
+				>
+					{editingGroup ? "Update Group" : "Save Group"}
+				</button>
+				{editingGroup && (
+					<button
+						type="button"
+						onClick={cancelGroupEdit}
+						className="w-full bg-gray-500 text-white p-2 rounded-full shadow-lg"
+					>
+						Cancel Edit
+					</button>
+				)}
+			</div>
+		</form>
+	);
+};
+
+const GroupList = ({
+	groups,
+	onEditGroup,
+	onDeleteGroup,
+}: {
+	groups: CacheGroup[];
+	onEditGroup: (group: CacheGroup) => void;
+	onDeleteGroup: (id: string) => void;
+}) => {
+	return (
+		<div>
+			<h2 className="text-xl font-bold mb-4">Cache Groups</h2>
+			{groups.length === 0 && <p>No groups found.</p>}
+			{groups.map((group) => (
+				<div
+					key={group.id}
+					className="p-4 mb-4 bg-gray-100 rounded-2xl shadow-lg"
+				>
+					<h3 className="text-lg font-semibold">{group.name}</h3>
+					<p>{group.description}</p>
+					<p className="text-gray-600 text-sm">
+						Galleries: {group.groupList.join(", ")}
+					</p>
+					<div className="mt-2 flex space-x-2">
+						<button
+							onClick={() => onEditGroup(group)}
+							className="bg-yellow-500 text-white px-4 py-2 rounded-full shadow-md"
+						>
+							Edit
+						</button>
+						<button
+							onClick={() => onDeleteGroup(group.id)}
+							className="bg-red-500 text-white px-4 py-2 rounded-full shadow-md"
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+};
+
+// ---------- Main ManagePage Component ----------
+
 export default function ManagePage() {
 	const { user } = useAuth();
+
+	// Gallery state & handlers
 	const [galleries, setGalleries] = useState<CacheGallery[]>([]);
 	const [formData, setFormData] = useState<CacheFormInput>({
 		name: "",
 		description: "",
 		lat: "",
 		lng: "",
-		gifUrl: "", // New field for GIF URL
+		gifUrl: "",
 	});
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -512,7 +646,16 @@ export default function ManagePage() {
 		null
 	);
 
-	// Subscribe to cache galleries on component mount
+	// Group state & handlers
+	const [groups, setGroups] = useState<CacheGroup[]>([]);
+	const [groupForm, setGroupForm] = useState<GroupFormInput>({
+		name: "",
+		description: "",
+		groupList: [],
+	});
+	const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+
+	// Subscribe to galleries
 	useEffect(() => {
 		const unsubscribe = subscribeToCacheGalleries((galleries) =>
 			setGalleries(galleries)
@@ -520,9 +663,15 @@ export default function ManagePage() {
 		return () => unsubscribe();
 	}, []);
 
-	// Completed handleCacheAdded function
+	// Subscribe to groups
+	useEffect(() => {
+		const unsubscribe = subscribeToCacheGroups((groups) =>
+			setGroups(groups)
+		);
+		return () => unsubscribe();
+	}, []);
+
 	const handleCacheAdded = () => {
-		// Since subscription auto-updates galleries, just show a success message
 		setCacheAddedSuccess("Cache added successfully!");
 		setTimeout(() => {
 			setCacheAddedSuccess(null);
@@ -536,7 +685,6 @@ export default function ManagePage() {
 			return;
 		}
 		if (editingGalleryId) {
-			// Update existing gallery
 			await updateCacheGallery(editingGalleryId, {
 				name: formData.name,
 				description: formData.description,
@@ -556,7 +704,6 @@ export default function ManagePage() {
 			});
 			setEditingGalleryId(null);
 		} else {
-			// Create new gallery with an initial cache
 			const galleryData: Omit<CacheGallery, "id" | "cacheList"> & {
 				initialCache: Omit<Cache, "id">;
 			} = {
@@ -582,7 +729,6 @@ export default function ManagePage() {
 			};
 			await createCacheGallery(galleryData);
 		}
-		// Reset form state
 		setFormData({
 			name: "",
 			description: "",
@@ -623,7 +769,7 @@ export default function ManagePage() {
 			description: gallery.description,
 			lat: gallery.lat.toString(),
 			lng: gallery.lng.toString(),
-			gifUrl: "", // Optionally pre-fill if your data includes a GIF URL
+			gifUrl: gallery.cacheList[0]?.gifUrl || "",
 		});
 		setEditingGalleryId(gallery.id);
 	};
@@ -654,37 +800,148 @@ export default function ManagePage() {
 		setSelectedGalleryForNewCache(gallery);
 	};
 
+	// Group handlers
+	const handleGroupSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!user) {
+			alert("User not found. Please sign in.");
+			return;
+		}
+		if (editingGroupId) {
+			// Optimistically update the group in local state
+			setGroups((prev) =>
+				prev.map((group) =>
+					group.id === editingGroupId
+						? {
+								...group,
+								name: groupForm.name,
+								description: groupForm.description,
+								groupList: groupForm.groupList,
+						  }
+						: group
+				)
+			);
+			try {
+				await updateCacheGroup(editingGroupId, {
+					name: groupForm.name,
+					description: groupForm.description,
+					groupList: groupForm.groupList,
+				});
+			} catch (error) {
+				alert("Failed to update group.");
+				// Optionally revert by re-fetching groups
+			}
+			setEditingGroupId(null);
+		} else {
+			// Create a temporary group object for optimistic update
+			const tempId = "temp-" + Date.now();
+			const newGroup: CacheGroup = {
+				id: tempId,
+				name: groupForm.name,
+				description: groupForm.description,
+				groupList: groupForm.groupList,
+			};
+			// Optimistically add the new group to local state
+			setGroups((prev) => [...prev, newGroup]);
+			try {
+				await createCacheGroup({
+					name: groupForm.name,
+					description: groupForm.description,
+					groupList: groupForm.groupList,
+				});
+			} catch (error) {
+				alert("Failed to create group.");
+				// Revert optimistic update
+				setGroups((prev) =>
+					prev.filter((group) => group.id !== tempId)
+				);
+			}
+		}
+		setGroupForm({ name: "", description: "", groupList: [] });
+	};
+
+	const handleEditGroup = (group: CacheGroup) => {
+		setGroupForm({
+			name: group.name,
+			description: group.description,
+			groupList: group.groupList,
+		});
+		setEditingGroupId(group.id);
+	};
+
+	const handleDeleteGroup = async (id: string) => {
+		if (confirm("Are you sure you want to delete this group?")) {
+			// Keep a copy of the current groups for potential rollback
+			const originalGroups = groups;
+			// Optimistically remove the group
+			setGroups((prev) => prev.filter((group) => group.id !== id));
+			try {
+				await deleteCacheGroup(id);
+			} catch (error) {
+				alert("Failed to delete group.");
+				// Revert deletion on error
+				setGroups(originalGroups);
+			}
+		}
+	};
+
+	const cancelGroupEdit = () => {
+		setEditingGroupId(null);
+		setGroupForm({ name: "", description: "", groupList: [] });
+	};
+
 	return (
-		<PageView title="Manage Cache Galleries">
-			{cacheAddedSuccess && (
-				<div className="bg-green-100 text-green-800 p-2 rounded mb-4">
-					{cacheAddedSuccess}
+		<PageView title="Manage Galleries & Groups">
+			<div className="flex flex-col md:flex-row gap-4">
+				{/* Galleries Management Panel */}
+				<div className="flex-1">
+					{cacheAddedSuccess && (
+						<div className="bg-green-100 text-green-800 p-2 rounded mb-4">
+							{cacheAddedSuccess}
+						</div>
+					)}
+					<CacheForm
+						formData={formData}
+						setFormData={setFormData}
+						handleSubmit={handleSubmit}
+						handleFillLocation={handleFillLocation}
+						setImageBlob={setImageBlob}
+						setAudioBlob={setAudioBlob}
+						editing={!!editingGalleryId}
+						cancelEdit={cancelEdit}
+					/>
+					<CacheList
+						galleries={galleries}
+						onEdit={handleEdit}
+						onDelete={handleDelete}
+						onAddCache={handleAddCache}
+					/>
+					{selectedGalleryForNewCache && user && (
+						<AddCacheModal
+							gallery={selectedGalleryForNewCache}
+							user={user}
+							onClose={() => setSelectedGalleryForNewCache(null)}
+							onCacheAdded={handleCacheAdded}
+						/>
+					)}
 				</div>
-			)}
-			<CacheForm
-				formData={formData}
-				setFormData={setFormData}
-				handleSubmit={handleSubmit}
-				handleFillLocation={handleFillLocation}
-				setImageBlob={setImageBlob}
-				setAudioBlob={setAudioBlob}
-				editing={!!editingGalleryId}
-				cancelEdit={cancelEdit}
-			/>
-			<CacheList
-				galleries={galleries}
-				onEdit={handleEdit}
-				onDelete={handleDelete}
-				onAddCache={handleAddCache}
-			/>
-			{selectedGalleryForNewCache && user && (
-				<AddCacheModal
-					gallery={selectedGalleryForNewCache}
-					user={user}
-					onClose={() => setSelectedGalleryForNewCache(null)}
-					onCacheAdded={handleCacheAdded}
-				/>
-			)}
+				{/* Groups Management Panel */}
+				<div className="flex-1">
+					<GroupForm
+						groupForm={groupForm}
+						setGroupForm={setGroupForm}
+						handleGroupSubmit={handleGroupSubmit}
+						editingGroup={editingGroupId}
+						cancelGroupEdit={cancelGroupEdit}
+						galleries={galleries}
+					/>
+					<GroupList
+						groups={groups}
+						onEditGroup={handleEditGroup}
+						onDeleteGroup={handleDeleteGroup}
+					/>
+				</div>
+			</div>
 		</PageView>
 	);
 }
