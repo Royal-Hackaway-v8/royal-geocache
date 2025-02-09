@@ -148,10 +148,10 @@ const Map: React.FC<MapProps> = ({
 			const GREEN = (1 - (scalar > 1 ? 1 : scalar)) * 255;
 			const iconColour = `rgb(${RED}, ${GREEN}, 80)`;
 			const iconSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="${iconColour}" width="30" height="30">
-          <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
-        </svg>
-      `;
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="${iconColour}" width="30" height="30">
+              <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
+            </svg>
+          `;
 			const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
 			const customIcon = Leaflet.icon({
 				iconUrl,
@@ -159,11 +159,16 @@ const Map: React.FC<MapProps> = ({
 				iconAnchor: [15, 30],
 			});
 			const popupContent = `
-        <div>
-          <h3 class="font-bold">${marker.name}</h3>
-          ${marker.description ? `<p>${marker.description}</p>` : ""}
-        </div>
-      `;
+            <div>
+              <h3 class="font-bold">${marker.name}</h3>
+              ${marker.description ? `<p>${marker.description}</p>` : ""}
+              <a href="/found-it/?cacheGalleryID=${
+					marker.id
+				}" class="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded mt-2">
+                View Details
+              </a>
+            </div>
+          `;
 			Leaflet.marker(marker.position, { icon: customIcon })
 				.addTo(markersLayerRef.current!)
 				.bindPopup(popupContent);

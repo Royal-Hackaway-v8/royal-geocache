@@ -7,34 +7,33 @@ import { subscribeToCacheGalleries } from "@/services/cacheService";
 import PageView from "@/components/ui/PageView";
 
 export default function FoundItPage() {
-	// const [coordinates, setCoordinates] = useState<>()
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const cacheGalleryID = searchParams.get("cacheGalleryID");
 
 	const [cacheGallery, setCacheGallery] = useState<CacheGallery | null>(null);
 
-	// const cacheGalleryID = useSearchParams().get("cacheGalleryID");
-	const cacheGalleryID = "-OIc9zAyiulitYLuQN2I";
-	if (cacheGalleryID === null) {
-		// if (markersFromGalleries.length === 0) {
-		// 	return router.push("/map");
-		// }
-	}
-
 	useEffect(() => {
+		if (!cacheGalleryID) {
+			// Redirect if no ID is provided in the query
+			router.push("/map");
+			return;
+		}
+
 		const unsubscribe = subscribeToCacheGalleries(
 			(galleries: CacheGallery[]) => {
-				console.log(galleries);
-				const markersFromGalleries = galleries.filter(
+				const foundGallery = galleries.find(
 					(gal) => gal.id === cacheGalleryID
 				);
-				// if (markersFromGalleries.length === 0) {
-				// 	return router.push("/map");
-				// }
-				setCacheGallery(markersFromGalleries[0]);
+				if (!foundGallery) {
+					router.push("/map");
+				} else {
+					setCacheGallery(foundGallery);
+				}
 			}
 		);
 		return () => unsubscribe();
-	}, []);
+	}, [cacheGalleryID, router]);
 
 	if (!cacheGallery) {
 		return (
