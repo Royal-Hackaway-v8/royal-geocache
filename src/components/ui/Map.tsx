@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import Leaflet, { LatLngLiteral } from "leaflet";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L, { LatLngLiteral } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
 	subscribeToCacheGalleries,
@@ -11,6 +12,7 @@ import { CacheGallery, CacheGroup } from "@/types";
 import { getDistance } from "@/lib/distance";
 import { WITHIN_RANGE_RADIUS } from "@/lib/constants";
 
+// Types for marker data
 export interface MarkerLocation {
 	id: string;
 	name: string;
@@ -22,39 +24,144 @@ interface MarkerLocationToPlayer extends MarkerLocation {
 	distanceToPlayer: number;
 }
 
-interface MapProps {
+export interface MapProps {
 	initialCenter?: [number, number];
 	zoom?: number;
 }
+
+/**
+ * ReactLeafletMap renders the map using react-leaflet.
+ * It expects marker data, user location, and selected galleries.
+ */
+const ReactLeafletMap: React.FC<
+	MapProps & {
+		markerWithDistance: MarkerLocationToPlayer[];
+		userLocation: L.LatLngExpression | null;
+		selectedGalleries: Set<string>;
+	}
+> = ({
+	initialCenter = [51.42595, -0.56521],
+	zoom = 16,
+	markerWithDistance,
+	userLocation,
+	selectedGalleries,
+}) => {
+	// Helper function to create a custom icon from an SVG color.
+	const createCustomIcon = (iconColour: string) => {
+		const iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="${iconColour}" width="30" height="30">
+        <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
+      </svg>
+    `;
+		const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
+		return L.icon({
+			iconUrl,
+			iconSize: [30, 30],
+			iconAnchor: [15, 30],
+		});
+	};
+
+	// Define a blue icon for the user location.
+	const userIcon = (() => {
+		const iconSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="blue" width="30" height="30">
+        <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
+      </svg>
+    `;
+		const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
+		return L.icon({
+			iconUrl,
+			iconSize: [30, 30],
+			iconAnchor: [15, 30],
+		});
+	})();
+
+	return (
+		<MapContainer
+			center={initialCenter}
+			zoom={zoom}
+			style={{ height: "100%", width: "100%" }}
+		>
+			<TileLayer
+				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+				attribution="© OpenStreetMap contributors"
+				maxZoom={19}
+			/>
+			{userLocation && (
+				<Marker position={userLocation} icon={userIcon}>
+					<Popup>Your Location</Popup>
+				</Marker>
+			)}
+			{markerWithDistance.map((marker) => {
+				// Compute a dynamic color based on the marker's distance.
+				const scalar =
+					(1 / Math.pow(WITHIN_RANGE_RADIUS, 1 / 3)) *
+					Math.pow(marker.distanceToPlayer, 1 / 3);
+				const red = (scalar > 1 ? 1 : scalar) * 255;
+				const green = (1 - (scalar > 1 ? 1 : scalar)) * 255;
+				const computedColor = `rgb(${red}, ${green}, 80)`;
+				const iconColour = selectedGalleries.has(marker.id)
+					? computedColor
+					: "gray";
+				const customIcon = createCustomIcon(iconColour);
+				return (
+					<Marker
+						key={marker.id}
+						position={marker.position}
+						icon={customIcon}
+					>
+						<Popup>
+							<div>
+								<h3 className="font-bold">
+									{marker.name} (
+									{marker.distanceToPlayer < 1
+										? `${Math.ceil(
+												marker.distanceToPlayer * 1000
+										  )}m`
+										: `${marker.distanceToPlayer.toFixed(
+												2
+										  )}km`}
+									)
+								</h3>
+								{marker.description && (
+									<p>{marker.description}</p>
+								)}
+								<a
+									href={`/found-it/?cacheGalleryID=${marker.id}`}
+									className="inline-block bg-indigo-100 hover:bg-indigo-200 text-white px-3 py-1 w-full text-center rounded-full shadow-md mt-2"
+								>
+									View Details
+								</a>
+							</div>
+						</Popup>
+					</Marker>
+				);
+			})}
+		</MapContainer>
+	);
+};
 
 const Map: React.FC<MapProps> = ({
 	initialCenter = [51.42595, -0.56521],
 	zoom = 16,
 }) => {
-	// Refs for Leaflet map and layers
-	const mapRef = useRef<Leaflet.Map | null>(null);
-	const markersLayerRef = useRef<Leaflet.LayerGroup | null>(null);
-	const userLocationLayerRef = useRef<Leaflet.LayerGroup | null>(null);
-
+	// State hooks for marker data, user location, and sidebar selections.
+	const [cacheMarkers, setCacheMarkers] = useState<MarkerLocation[]>([]);
 	const [markerWithDistance, setMarkerWithDistance] = useState<
 		MarkerLocationToPlayer[]
 	>([]);
-	const [userLocation, setUserLocation] =
-		useState<Leaflet.LatLngExpression | null>(null);
-	const [cacheMarkers, setCacheMarkers] = useState<MarkerLocation[]>([]);
-
-	// Sidebar state: global selection of galleries and group expansion
+	const [userLocation, setUserLocation] = useState<L.LatLngExpression | null>(
+		null
+	);
 	const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(
 		new Set()
 	);
 	const [expandedGroups, setExpandedGroups] = useState<{
 		[groupId: string]: boolean;
 	}>({});
-
-	// Example cache groups; these can come from RTDB as needed
 	const [cacheGroups, setCacheGroups] = useState<CacheGroup[]>([]);
 
-	// Subscribe to cache galleries from RTDB and set cache markers
+	// Subscribe to cache groups.
 	useEffect(() => {
 		const unsubscribe = subscribeToCacheGroups((groups: CacheGroup[]) => {
 			setCacheGroups(groups);
@@ -62,7 +169,7 @@ const Map: React.FC<MapProps> = ({
 		return () => unsubscribe();
 	}, []);
 
-	// Watch user location
+	// Watch user location.
 	useEffect(() => {
 		const watchId = navigator.geolocation.watchPosition(
 			(position) => {
@@ -77,7 +184,7 @@ const Map: React.FC<MapProps> = ({
 		return () => navigator.geolocation.clearWatch(watchId);
 	}, []);
 
-	// Subscribe to cache galleries from RTDB and set cache markers
+	// Subscribe to cache galleries.
 	useEffect(() => {
 		const unsubscribe = subscribeToCacheGalleries(
 			(galleries: CacheGallery[]) => {
@@ -93,7 +200,7 @@ const Map: React.FC<MapProps> = ({
 		return () => unsubscribe();
 	}, []);
 
-	// Initialize selectedGalleries once cacheMarkers load (all markers selected by default)
+	// Initialize selectedGalleries when markers load.
 	useEffect(() => {
 		if (cacheMarkers.length > 0 && selectedGalleries.size === 0) {
 			setSelectedGalleries(
@@ -102,7 +209,7 @@ const Map: React.FC<MapProps> = ({
 		}
 	}, [cacheMarkers, selectedGalleries]);
 
-	// Compute distances from user location to each marker
+	// Compute distances from userLocation to each marker.
 	useEffect(() => {
 		if (!cacheMarkers || userLocation === null) return;
 		const markersWithDistance = cacheMarkers.map((marker) => ({
@@ -118,106 +225,7 @@ const Map: React.FC<MapProps> = ({
 		setMarkerWithDistance(markersWithDistance);
 	}, [cacheMarkers, userLocation]);
 
-	// Initialize Leaflet map on first render
-	useEffect(() => {
-		if (mapRef.current) return;
-		mapRef.current = Leaflet.map("map", {
-			center: initialCenter,
-			zoom,
-			minZoom: 10,
-			maxZoom: 18,
-			maxBounds: [
-				[-90, -180],
-				[90, 180],
-			],
-			maxBoundsViscosity: 1.0,
-		});
-		Leaflet.tileLayer(
-			"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-			{
-				maxZoom: 19,
-				attribution: "© OpenStreetMap contributors",
-			}
-		).addTo(mapRef.current);
-		markersLayerRef.current = Leaflet.layerGroup().addTo(mapRef.current);
-		userLocationLayerRef.current = Leaflet.layerGroup().addTo(
-			mapRef.current
-		);
-	}, [initialCenter, zoom]);
-
-	// Update user location marker on the map
-	useEffect(() => {
-		if (!userLocation || !mapRef.current || !userLocationLayerRef.current)
-			return;
-		userLocationLayerRef.current.clearLayers();
-		const iconSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="blue" width="30" height="30">
-        <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
-      </svg>
-    `;
-		const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
-		const customIcon = Leaflet.icon({
-			iconUrl,
-			iconSize: [30, 30],
-			iconAnchor: [15, 30],
-		});
-		Leaflet.marker(userLocation, { icon: customIcon }).addTo(
-			userLocationLayerRef.current
-		);
-	}, [userLocation]);
-
-	// Update map markers based on distance and selection state
-	useEffect(() => {
-		if (!mapRef.current || !markersLayerRef.current || !markerWithDistance)
-			return;
-		markersLayerRef.current.clearLayers();
-		markerWithDistance.forEach((marker) => {
-			// Compute dynamic color based on distance
-			const scalar =
-				(1 / Math.pow(WITHIN_RANGE_RADIUS, 1 / 3)) *
-				Math.pow(marker.distanceToPlayer, 1 / 3);
-			const RED = (scalar > 1 ? 1 : scalar) * 255;
-			const GREEN = (1 - (scalar > 1 ? 1 : scalar)) * 255;
-			const computedColor = `rgb(${RED}, ${GREEN}, 80)`;
-
-			// Use computed color if selected, else gray
-			const iconColour = selectedGalleries.has(marker.id)
-				? computedColor
-				: "gray";
-
-			const iconSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="${iconColour}" width="30" height="30">
-          <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
-        </svg>
-      `;
-			const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
-			const customIcon = Leaflet.icon({
-				iconUrl,
-				iconSize: [30, 30],
-				iconAnchor: [15, 30],
-			});
-			const popupContent = `
-  <div>
-    <h3 class="font-bold">${marker.name} (${
-				marker.distanceToPlayer < 1
-					? `${Math.ceil(marker.distanceToPlayer * 1000)}m`
-					: `${marker.distanceToPlayer.toFixed(2)}km`
-			})</h3>
-          ${marker.description ? `<p>${marker.description}</p>` : ""}
-          <a href="/found-it/?cacheGalleryID=${
-				marker.id
-			}" class="inline-block bg-indigo-100 hover:bg-indigo-200 text-white px-3 py-1 w-full text-center rounded-full shadow-md mt-2">
-            View Details
-          </a>
-        </div>
-      `;
-			Leaflet.marker(marker.position, { icon: customIcon })
-				.addTo(markersLayerRef.current!)
-				.bindPopup(popupContent);
-		});
-	}, [markerWithDistance, selectedGalleries]);
-
-	// Toggle expansion/collapse of a cache group
+	// Sidebar handlers.
 	const toggleExpand = (groupId: string) => {
 		setExpandedGroups((prev) => ({
 			...prev,
@@ -225,7 +233,6 @@ const Map: React.FC<MapProps> = ({
 		}));
 	};
 
-	// Toggle a group's checkbox to select/deselect all galleries in the group
 	const toggleGroupCheckbox = (group: CacheGroup) => {
 		const allSelected = group.groupList.every((id) =>
 			selectedGalleries.has(id)
@@ -241,7 +248,6 @@ const Map: React.FC<MapProps> = ({
 		});
 	};
 
-	// Toggle individual gallery checkbox
 	const toggleGallery = (galleryId: string) => {
 		setSelectedGalleries((prev) => {
 			const newSelected = new Set(prev);
@@ -256,25 +262,30 @@ const Map: React.FC<MapProps> = ({
 		<div className="flex w-full">
 			{/* Map Container */}
 			<div className="overflow-hidden rounded-xl shadow-lg w-full ml-5">
-				<div id="map" className="h-96 w-full" />
+				<div className="h-96 w-full">
+					<ReactLeafletMap
+						initialCenter={initialCenter}
+						zoom={zoom}
+						markerWithDistance={markerWithDistance}
+						userLocation={userLocation}
+						selectedGalleries={selectedGalleries}
+					/>
+				</div>
 			</div>
 
 			{/* Sidebar Container */}
 			<div className="w-80 mx-5 p-5 bg-white flex flex-col rounded-xl shadow-md">
 				<h2 className="text-lg font-semibold mb-4">Cache Groups</h2>
 				{cacheGroups.map((group) => {
-					// Determine checkbox status for the group
 					const groupGalleryIds = group.groupList;
 					const allSelected = groupGalleryIds.every((id) =>
 						selectedGalleries.has(id)
 					);
-
 					return (
 						<div
 							key={group.id}
 							className="rounded-xl mb-3 shadow-lg overflow-hidden"
 						>
-							{/* Group Header */}
 							<div
 								className="flex items-center justify-between p-2 bg-gray-100 cursor-pointer rounded-xl shadow"
 								onClick={() => toggleExpand(group.id)}
@@ -298,8 +309,6 @@ const Map: React.FC<MapProps> = ({
 									{expandedGroups[group.id] ? "-" : "+"}
 								</div>
 							</div>
-
-							{/* Collapsible Gallery List */}
 							{expandedGroups[group.id] && (
 								<div className="pl-6 p-2 space-y-2">
 									{group.groupList.map((galleryId) => {
