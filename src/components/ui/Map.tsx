@@ -227,7 +227,7 @@ const Map: React.FC<MapProps> = ({
 				.addTo(markersLayerRef.current!)
 				.bindPopup(popupContent);
 		});
-	}, [markerWithDistance, selectedGalleries]);
+	}, [markerWithDistance, selectedGalleries, LEAFLET_CLIENT]);
 
 	// Toggle expansion/collapse of a cache group
 	const toggleExpand = (groupId: string) => {
