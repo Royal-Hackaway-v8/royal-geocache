@@ -9,6 +9,7 @@ import {
 	addCacheToGallery,
 } from "@/services/cacheService";
 import { AppUser, CacheGallery } from "@/types";
+import { FaShieldAlt } from "react-icons/fa";
 
 export default function ProfilePage() {
 	const { user, loading, handleSignOut } = useAuth();
@@ -62,7 +63,7 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<PageView title="Your Profile">
+		<PageView>
 			<div className="bg-white rounded-2xl shadow-lg max-w-md w-full overflow-hidden transform transition duration-200 hover:-translate-y-1">
 				{/* Profile Header */}
 				<div className="bg-gradient-to-br from-green-200 to-green-500 p-6 text-center text-white">
@@ -71,16 +72,15 @@ export default function ProfilePage() {
 						alt="User Avatar"
 						className="w-24 h-24 rounded-full shadow-lg border-4 border-white mx-auto mb-4 object-cover"
 					/>
-					<h2 className="text-xl font-semibold">
+					<h2 className="text-xl font-semibold flex items-center justify-center gap-2">
 						{user.displayName || "Anonymous"}
+						{userData?.isStaff && (
+							<span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
+								<FaShieldAlt className="text-xs" /> Staff
+							</span>
+						)}
 					</h2>
 					<p className="text-sm">{user.email}</p>
-					<div>
-						<div>Visited Caches</div>
-						{visitedCacheGalleries.map((cg) => {
-							return <div>{cg.name}</div>;
-						})}
-					</div>
 				</div>
 
 				{/* Profile Body */}
@@ -111,6 +111,14 @@ export default function ProfilePage() {
 						</button>
 					)}
 				</div>
+			</div>
+
+			{/* Visited Caches */}
+			<div className="mt-8 bg-white max-w-md w-full rounded-2xl shadow-lg p-6">
+				<div>Visited Caches</div>
+				{visitedCacheGalleries.map((cg) => {
+					return <div>{cg.name}</div>;
+				})}
 			</div>
 		</PageView>
 	);
