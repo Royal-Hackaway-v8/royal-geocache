@@ -7,6 +7,7 @@ import { subscribeToCacheGalleries } from "@/services/cacheService";
 import { CacheGallery } from "@/types";
 import { getDistance } from "@/lib/distance";
 import { GoPackage } from "react-icons/go";
+import { WITHIN_RANGE_RADIUS } from "@/lib/constants";
 
 export interface MarkerLocation {
 	id: string;
@@ -142,7 +143,7 @@ const Map: React.FC<MapProps> = ({
 		markersLayerRef.current.clearLayers();
 		markerWithDistance.forEach((marker) => {
 			const scalar =
-				(1 / Math.pow(5, 1 / 3)) *
+				(1 / Math.pow(WITHIN_RANGE_RADIUS, 1 / 3)) *
 				Math.pow(marker.distanceToPlayer, 1 / 3);
 			const RED = (scalar > 1 ? 1 : scalar) * 255;
 			const GREEN = (1 - (scalar > 1 ? 1 : scalar)) * 255;
