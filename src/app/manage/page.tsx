@@ -265,7 +265,7 @@ const CacheForm = ({
 				placeholder="GIF URL"
 				className="w-full border p-2 rounded mb-4"
 			/>
-			<ImageUploader setImageBlob={setImageBlob} />
+			{/* <ImageUploader setImageBlob={setImageBlob} /> */}
 			<AudioRecorder setAudioBlob={setAudioBlob} />
 			<div className="flex space-x-2">
 				<button

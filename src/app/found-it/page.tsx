@@ -436,9 +436,9 @@ function FoundItPageContent() {
 										onSubmit={handleAddCache}
 										className="flex flex-col gap-4"
 									>
-										<ImageUploader
+										{/* <ImageUploader
 											setImageBlob={setImageBlob}
-										/>
+										/> */}
 										<AudioRecorder
 											setAudioBlob={setAudioBlob}
 										/>
@@ -525,7 +525,7 @@ function FoundItPageContent() {
 													cache.updatedAt
 												).toLocaleString()}
 											</div>
-											{cache.image && (
+											{/* {cache.image && (
 												<div className="mb-2">
 													<img
 														src={cache.image}
@@ -533,7 +533,7 @@ function FoundItPageContent() {
 														className="w-full h-auto rounded"
 													/>
 												</div>
-											)}
+											)} */}
 											{cache.gifUrl && (
 												<div className="mb-2">
 													<img
