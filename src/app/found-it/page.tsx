@@ -454,7 +454,7 @@ function FoundItPageContent() {
 												href="https://giphy.com/"
 												target="_blank"
 												rel="noreferrer"
-												className="text-black my-auto"
+												className="text-black my-auto underline"
 											>
 												Giphy is Recommended!
 											</a>
