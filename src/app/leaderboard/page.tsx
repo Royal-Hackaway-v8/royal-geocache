@@ -97,11 +97,10 @@ export default function GlobalLeaderboardPage() {
 	if (Object.keys(users).length === 0 || galleries.length === 0) {
 		return (
 			<PageView title="Global Leaderboard">
-				<div className="container mx-auto p-4">
-					<h1 className="text-3xl font-bold mb-4">
-						Global Leaderboard
-					</h1>
-					<p className="text-gray-600">Loading leaderboard data...</p>
+				<div className="container mx-2 p-4 bg-white rounded-xl shadow-lg">
+					<p className="text-gray-600 text-center">
+						Loading leaderboard data...
+					</p>
 				</div>
 			</PageView>
 		);
@@ -115,17 +114,17 @@ export default function GlobalLeaderboardPage() {
 						<table className="min-w-full bg-white shadow-lg rounded-xl overflow-hidden">
 							<thead>
 								<tr className="bg-gradient-to-br from-green-400 to-green-600 text-white">
-									<th className="py-3 px-5 text-left">
+									<th className="py-3 px-4 text-left">
 										Rank
 									</th>
-									<th className="py-3 px-5 text-left">
+									<th className="py-3 px-4 text-left">
 										Name
 									</th>
-									<th className="py-3 px-5 text-left">
+									<th className="py-3 px-4 text-left">
 										Galleries Visited
 									</th>
-									<th className="py-3 px-5 text-left">
-										Caches Left
+									<th className="py-3 px-4 text-left">
+										Caches Made
 									</th>
 								</tr>
 							</thead>
@@ -148,20 +147,20 @@ export default function GlobalLeaderboardPage() {
 											} hover:bg-gray-100`}
 										>
 											<td
-												className={`py-3 px-5 ${
+												className={`py-3 px-4 ${
 													rankColors[index] ||
 													"text-gray-700"
 												}`}
 											>
 												{index + 1}
 											</td>
-											<td className="py-3 px-5 text-gray-900">
+											<td className="py-3 px-4 text-gray-900">
 												{entry.displayName}
 											</td>
-											<td className="py-3 px-5 text-gray-700">
+											<td className="py-3 px-4 text-gray-700">
 												{entry.galleriesVisited}
 											</td>
-											<td className="py-3 px-5 text-gray-700">
+											<td className="py-3 px-4 text-gray-700">
 												{entry.cachesLeft}
 											</td>
 										</tr>
