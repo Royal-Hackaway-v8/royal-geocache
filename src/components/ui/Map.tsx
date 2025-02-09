@@ -3,7 +3,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import Leaflet, { LatLngLiteral } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { subscribeToCacheGalleries } from "@/services/cacheService";
+import {
+	subscribeToCacheGalleries,
+	subscribeToCacheGroups,
+} from "@/services/cacheService";
 import { CacheGallery, CacheGroup } from "@/types";
 import { getDistance } from "@/lib/distance";
 import { WITHIN_RANGE_RADIUS } from "@/lib/constants";
@@ -49,20 +52,15 @@ const Map: React.FC<MapProps> = ({
 	}>({});
 
 	// Example cache groups; these can come from RTDB as needed
-	const [cacheGroups, setCacheGroups] = useState<CacheGroup[]>([
-		{
-			id: "1",
-			groupList: ["-OIcLVdtwmE0QiA4I1eY", "-OIcTy26s-kZ8IMNHNJA"],
-			name: "Egham",
-			description: "Eggy",
-		},
-		{
-			id: "2",
-			groupList: ["-OIcLVdtwmE0QiA4I1eY"],
-			name: "RHUL",
-			description: "Holly Way",
-		},
-	]);
+	const [cacheGroups, setCacheGroups] = useState<CacheGroup[]>([]);
+
+	// Subscribe to cache galleries from RTDB and set cache markers
+	useEffect(() => {
+		const unsubscribe = subscribeToCacheGroups((groups: CacheGroup[]) => {
+			setCacheGroups(groups);
+		});
+		return () => unsubscribe();
+	}, []);
 
 	// Watch user location
 	useEffect(() => {
