@@ -39,10 +39,6 @@ export default function ProfilePage() {
 		return () => unsubscribe();
 	}, [userData]);
 
-	useEffect(() => {
-		console.log("Visited Galleries:", visitedCacheGalleries);
-	}, [visitedCacheGalleries]);
-
 	if (loading) {
 		return (
 			<PageView title="Profile">
