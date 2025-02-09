@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { CacheGallery, Cache } from "@/types";
+import { CacheGallery, Cache, AppUser } from "@/types";
 import { useEffect, useState, useRef } from "react";
 import {
 	subscribeToCacheGalleries,
@@ -13,7 +13,11 @@ import { CACHING_THRESHOLD } from "@/lib/constants";
 import { FaInfoCircle } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
 import { useAuth } from "@/context/AuthContext";
-import { addGalleryToUserCachesCollected } from "@/services/userService";
+import {
+	addGalleryToUserCachesCollected,
+	getUser,
+	subscribeToUser,
+} from "@/services/userService";
 
 const AudioRecorder = ({
 	setAudioBlob,
@@ -161,18 +165,63 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.readAsDataURL(blob);
 	});
 
+// Helper to get a display name for a user based on uid.
+// If the current user matches, we use their displayName.
+const getUserDisplayName = (uid: string, currentUser: AppUser | null) => {
+	if (currentUser && currentUser.uid === uid && currentUser.displayName) {
+		return currentUser.displayName;
+	}
+	return uid; // fallback to uid if no display name available
+};
+
 export default function FoundItPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const cacheGalleryID = searchParams.get("cacheGalleryID");
 	const { user } = useAuth();
 
+	// Create a state for extended user data (AppUser)
+	const [appUser, setAppUser] = useState<AppUser | null>(null);
+	useEffect(() => {
+		if (user) {
+			const unsubscribe = subscribeToUser(
+				user.uid,
+				(data: AppUser | null) => {
+					if (data) {
+						setAppUser(data);
+					}
+				}
+			);
+			return () => unsubscribe();
+		}
+	}, [user]);
+
+	const [leaderboard, setLeaderboard] = useState<{
+		[uid: string]: { displayName: string; count: number };
+	}>({});
 	const [userLocation, setUserLocation] = useState<{
 		lat: number;
 		lon: number;
 	} | null>(null);
 	const [isWithinDistance, setIsWithinDistance] = useState<boolean>(false);
+	const [cacheGallery, setCacheGallery] = useState<CacheGallery | null>(null);
+	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+	const [gifUrl, setGifUrl] = useState("");
+	const [adding, setAdding] = useState(false);
+	const [errorMsg, setErrorMsg] = useState("");
+	const [hasVisited, setHasVisited] = useState(false);
 
+	// Check if the extended user has already visited this gallery
+	useEffect(() => {
+		if (appUser && cacheGalleryID) {
+			if (appUser.cachesCollected.includes(cacheGalleryID)) {
+				setHasVisited(true);
+			}
+		}
+	}, [appUser, cacheGalleryID]);
+
+	// Watch user location
 	useEffect(() => {
 		const watchId = navigator.geolocation.watchPosition(
 			(position) => {
@@ -187,7 +236,7 @@ export default function FoundItPage() {
 		return () => navigator.geolocation.clearWatch(watchId);
 	}, []);
 
-	const [cacheGallery, setCacheGallery] = useState<CacheGallery | null>(null);
+	// Subscribe to cache galleries and get the requested gallery
 	useEffect(() => {
 		if (!cacheGalleryID) {
 			router.push("/map");
@@ -214,6 +263,48 @@ export default function FoundItPage() {
 	}, [cacheGalleryID, router]);
 
 	useEffect(() => {
+		async function updateLeaderboardNames() {
+			// Make a copy of the current leaderboard
+			const updatedLeaderboard = { ...leaderboard };
+			// For each uid, fetch user data and update the displayName if available
+			const uids = Object.keys(updatedLeaderboard);
+			await Promise.all(
+				uids.map(async (uid) => {
+					const userData = await getUser(uid);
+					if (userData && userData.displayName) {
+						updatedLeaderboard[uid].displayName =
+							userData.displayName;
+					}
+				})
+			);
+			setLeaderboard(updatedLeaderboard);
+		}
+		if (Object.keys(leaderboard).length > 0) {
+			updateLeaderboardNames();
+		}
+	}, [leaderboard]);
+
+	// Compute leaderboard using reduce and get proper display names
+	useEffect(() => {
+		if (!cacheGallery) return;
+		const newLeaderboard = cacheGallery.cacheList.reduce((acc, cache) => {
+			if (!acc[cache.updatedByUid]) {
+				acc[cache.updatedByUid] = {
+					displayName: getUserDisplayName(
+						cache.updatedByUid,
+						appUser
+					),
+					count: 0,
+				};
+			}
+			acc[cache.updatedByUid].count++;
+			return acc;
+		}, {} as { [uid: string]: { displayName: string; count: number } });
+		setLeaderboard(newLeaderboard);
+	}, [cacheGallery, appUser]);
+
+	// Check distance from user to gallery
+	useEffect(() => {
 		if (!userLocation || !cacheGallery) return;
 		const distanceTo = getDistance(userLocation, {
 			lat: cacheGallery.lat,
@@ -222,14 +313,7 @@ export default function FoundItPage() {
 		setIsWithinDistance(distanceTo < CACHING_THRESHOLD);
 	}, [userLocation, cacheGallery]);
 
-	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
-	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-	const [gifUrl, setGifUrl] = useState("");
-	const [adding, setAdding] = useState(false);
-	const [errorMsg, setErrorMsg] = useState("");
-	const [hasVisited, setHasVisited] = useState(false);
-
-	// Updated markGalleryAsVisited now updates the user's cachesCollected in the DB
+	// Mark gallery as visited and update user's cachesCollected
 	const markGalleryAsVisited = async (galleryId: string) => {
 		if (!user) return;
 		try {
@@ -302,63 +386,75 @@ export default function FoundItPage() {
 						</div>
 					</div>
 
+					{/* If not visited, show the submission form */}
 					{!hasVisited && (
-						<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
-							<FaInfoCircle size={20} className="my-auto" />
-							<span>
-								To view the caches inside this gallery, you must
-								first submit a cache.
-							</span>
-						</div>
-					)}
-
-					<div className="bg-gray-100 p-4 rounded-xl shadow">
-						<h2 className="text-xl font-bold mb-2">
-							Add a New Cache
-						</h2>
-						{!isWithinDistance && (
-							<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded-lg mb-2 shadow-sm flex gap-2">
-								<PiSealWarningFill
-									size={20}
-									className="my-auto"
-								/>
+						<>
+							<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
+								<FaInfoCircle size={20} className="my-auto" />
 								<span>
-									You must be within {CACHING_THRESHOLD} km to
-									add a cache.
+									To view the caches inside this gallery, you
+									must first submit a cache.
 								</span>
 							</div>
-						)}
-						{errorMsg && (
-							<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
-								{errorMsg}
-							</div>
-						)}
-						{isWithinDistance && (
-							<form
-								onSubmit={handleAddCache}
-								className="flex flex-col gap-4"
-							>
-								<ImageUploader setImageBlob={setImageBlob} />
-								<AudioRecorder setAudioBlob={setAudioBlob} />
-								<input
-									type="text"
-									placeholder="GIF URL"
-									className="p-2 border rounded"
-									value={gifUrl}
-									onChange={(e) => setGifUrl(e.target.value)}
-									disabled={!isWithinDistance}
-								/>
-								<button
-									type="submit"
-									className="bg-green-500 text-white p-2 rounded-full shadow-lg"
-									disabled={!isWithinDistance || adding}
-								>
-									{adding ? "Adding..." : "Add Cache"}
-								</button>
-							</form>
-						)}
+							{isWithinDistance && (
+								<div className="bg-gray-100 p-4 rounded-xl shadow">
+									<h2 className="text-xl font-bold mb-2">
+										Add a New Cache
+									</h2>
+									{errorMsg && (
+										<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
+											{errorMsg}
+										</div>
+									)}
+									<form
+										onSubmit={handleAddCache}
+										className="flex flex-col gap-4"
+									>
+										<ImageUploader
+											setImageBlob={setImageBlob}
+										/>
+										<AudioRecorder
+											setAudioBlob={setAudioBlob}
+										/>
+										<input
+											type="text"
+											placeholder="GIF URL"
+											className="p-2 border rounded"
+											value={gifUrl}
+											onChange={(e) =>
+												setGifUrl(e.target.value)
+											}
+											disabled={!isWithinDistance}
+										/>
+										<button
+											type="submit"
+											className="bg-green-500 text-white p-2 rounded-full shadow-lg"
+											disabled={
+												!isWithinDistance || adding
+											}
+										>
+											{adding ? "Adding..." : "Add Cache"}
+										</button>
+									</form>
+								</div>
+							)}
+						</>
+					)}
+
+					{/* Leaderboard (always shown) */}
+					<div>
+						<h2 className="text-xl font-bold mb-2">Leaderboard</h2>
+						{Object.keys(leaderboard).map((key) => {
+							const data = leaderboard[key];
+							return (
+								<div key={key}>
+									{data.displayName}: {data.count}
+								</div>
+							);
+						})}
 					</div>
 
+					{/* Display caches if gallery is visited */}
 					{hasVisited ? (
 						<div className="bg-white p-4 rounded-xl shadow">
 							<h2 className="text-xl font-bold mb-2">Caches</h2>
