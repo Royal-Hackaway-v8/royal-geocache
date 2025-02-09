@@ -270,10 +270,13 @@ const Map: React.FC<MapProps> = ({
 					);
 
 					return (
-						<div key={group.id} className="border rounded mb-3">
+						<div
+							key={group.id}
+							className="rounded-xl mb-3 shadow-lg overflow-hidden"
+						>
 							{/* Group Header */}
 							<div
-								className="flex items-center justify-between p-2 bg-gray-100 cursor-pointer"
+								className="flex items-center justify-between p-2 bg-gray-100 cursor-pointer rounded-xl shadow"
 								onClick={() => toggleExpand(group.id)}
 							>
 								<div className="flex items-center gap-2">
@@ -321,7 +324,7 @@ const Map: React.FC<MapProps> = ({
 												/>
 												<a
 													href={`/found-it/?cacheGalleryID=${gallery.id}`}
-													className="text-blue-600 hover:underline text-sm"
+													className="text-green-600 hover:underline text-sm"
 												>
 													{gallery.name}
 												</a>
