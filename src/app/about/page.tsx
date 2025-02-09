@@ -3,11 +3,11 @@ import PageView from "@/components/ui/PageView";
 export default function AboutPage() {
 	return (
 		<PageView title="">
-			<div className="min-h-screen bg-white py-12">
+			<div className="min-h-screen bg-white py-12 rounded-2xl">
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
 					<div className="prose lg:prose-xl">
 						{/* Main Title with Animation */}
-						<h1 className="text-4xl font-bold mb-8 text-green-600 animate-fade-in-down">
+						<h1 className="text-4xl font-bold mb-8 text-green-500 animate-fade-in-down">
 							About CacheGrab
 						</h1>
 
@@ -15,7 +15,7 @@ export default function AboutPage() {
 						<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg transition-all hover:shadow-xl">
 							<p className="text-lg leading-relaxed text-gray-700">
 								Welcome to{" "}
-								<span className="font-semibold text-green-600">
+								<span className="font-semibold text-green-500">
 									CacheGrab
 								</span>
 								, the revolutionary way to explore your
@@ -29,7 +29,7 @@ export default function AboutPage() {
 						{/* Mission Section */}
 						<div className="space-y-8">
 							<div className="animate-fade-in delay-100">
-								<h2 className="text-3xl font-bold mb-4 text-green-600 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+								<h2 className="text-3xl font-bold mb-4 text-green-500 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
 									Our Mission
 								</h2>
 								<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
@@ -55,7 +55,7 @@ export default function AboutPage() {
 
 							{/* How It Works Section */}
 							<div className="animate-fade-in delay-200">
-								<h2 className="text-3xl font-bold mb-4 text-green-600 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+								<h2 className="text-3xl font-bold mb-4 text-green-500 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
 									How It Works
 								</h2>
 								<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
@@ -101,7 +101,7 @@ export default function AboutPage() {
 							</div>
 
 							{/* Call to Action */}
-							<div className="animate-fade-in delay-300 mt-12 text-center shadow-lg transition-all hover:shadow-xl">
+							<div className="animate-fade-in delay-300 mt-12 text-center">
 								<a
 									href="/map"
 									className="inline-block bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
