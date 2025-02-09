@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import PageView from "@/components/ui/PageView";
-import { Cache } from "@/types";
+import { CacheGallery, Cache } from "@/types";
 import {
-	subscribeToCaches,
-	createCache,
-	updateCache,
-	deleteCache,
+	subscribeToCacheGalleries,
+	createCacheGallery,
+	updateCacheGallery,
+	deleteCacheGallery,
+	addCacheToGallery,
 } from "@/services/cacheService";
+import { useAuth } from "@/context/AuthContext";
 
-// Assume blobToBase64 is defined elsewhere or in this file
+// Convert blob to Base64 string and ensure we don't pass undefined values
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -19,7 +21,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.readAsDataURL(blob);
 	});
 
-// New interface for form input state
+// Interface for gallery form input state
 interface CacheFormInput {
 	name: string;
 	description: string;
@@ -122,7 +124,7 @@ const ImageUploader = ({
 	);
 };
 
-// Cache Form Component
+// Cache Gallery Form Component (for creating/updating a gallery)
 const CacheForm = ({
 	formData,
 	setFormData,
@@ -154,21 +156,21 @@ const CacheForm = ({
 			className="mb-8 p-4 bg-white rounded-2xl shadow-lg"
 		>
 			<h2 className="text-xl font-bold mb-4">
-				{editing ? "Edit Cache" : "Add Cache"}
+				{editing ? "Edit Cache Gallery" : "Add Cache Gallery"}
 			</h2>
 			<input
 				type="text"
 				name="name"
 				value={formData.name}
 				onChange={handleChange}
-				placeholder="Cache name"
+				placeholder="Gallery name"
 				className="w-full border p-2 rounded mb-4"
 			/>
 			<textarea
 				name="description"
 				value={formData.description}
 				onChange={handleChange}
-				placeholder="Cache description"
+				placeholder="Gallery description"
 				className="w-full border p-2 rounded mb-4"
 			></textarea>
 
@@ -210,7 +212,7 @@ const CacheForm = ({
 					type="submit"
 					className="w-full bg-blue-500 text-white p-2 rounded-full shadow-md"
 				>
-					{editing ? "Update Cache" : "Save Cache"}
+					{editing ? "Update Gallery" : "Save Gallery"}
 				</button>
 				{editing && (
 					<button
@@ -226,23 +228,23 @@ const CacheForm = ({
 	);
 };
 
-// Cache List Component (using stored full data URLs)
+// Component for displaying cache galleries and offering edit, delete, and add-cache options
 const CacheList = ({
-	caches,
+	galleries,
 	onEdit,
 	onDelete,
+	onAddCache,
 }: {
-	caches: Cache[];
-	onEdit: (cache: Cache) => void;
+	galleries: CacheGallery[];
+	onEdit: (gallery: CacheGallery) => void;
 	onDelete: (id: string) => void;
+	onAddCache: (gallery: CacheGallery) => void;
 }) => {
-	// Modal state for viewing images/audio
 	const [modalContent, setModalContent] = useState<{
 		type: "image" | "audio";
 		src: string;
 	} | null>(null);
 
-	// Format timestamp function
 	const formatTimestamp = (timestamp: string | number | Date) => {
 		if (!timestamp) return "Unknown date";
 		const date = new Date(timestamp);
@@ -257,7 +259,6 @@ const CacheList = ({
 		}).format(date);
 	};
 
-	// Simply set modal content to the stored data URL
 	const handleOpenModal = (type: "image" | "audio", dataUrl: string) => {
 		setModalContent({ type, src: dataUrl });
 	};
@@ -268,45 +269,46 @@ const CacheList = ({
 
 	return (
 		<div>
-			<h2 className="text-xl font-bold mb-4">Caches</h2>
-			{caches.length === 0 && <p>No caches found.</p>}
-			{caches.map((cache) => (
+			<h2 className="text-xl font-bold mb-4">Cache Galleries</h2>
+			{galleries.length === 0 && <p>No galleries found.</p>}
+			{galleries.map((gallery) => (
 				<div
-					key={cache.id}
+					key={gallery.id}
 					className="p-4 mb-4 bg-gray-100 rounded-2xl shadow-lg"
 				>
-					<h3 className="text-lg font-semibold">{cache.name}</h3>
-					<p>{cache.description}</p>
+					<h3 className="text-lg font-semibold">{gallery.name}</h3>
+					<p>{gallery.description}</p>
 					<p>
-						<span>Lat: {cache.lat}</span>,{" "}
-						<span>Lng: {cache.lng}</span>
+						<span>Lat: {gallery.lat}</span>,{" "}
+						<span>Lng: {gallery.lng}</span>
 					</p>
 					<p className="text-gray-600 text-sm">
-						Created: {formatTimestamp(cache.createdAt)}
+						Created: {formatTimestamp(gallery.createdAt)}
 					</p>
 
-					{/* Clickable image preview */}
-					{cache.image && (
+					{gallery.cacheList[0]?.image && (
 						<div
 							className="cursor-pointer hover:opacity-75 mb-2"
 							onClick={() =>
-								handleOpenModal("image", cache.image!)
+								handleOpenModal(
+									"image",
+									gallery.cacheList[0].image!
+								)
 							}
 						>
 							<img
-								src={cache.image}
-								alt="Cache"
+								src={gallery.cacheList[0].image}
+								alt="Gallery Preview"
 								className="max-w-xs"
 							/>
 						</div>
 					)}
 
-					{/* Audio player with modal trigger */}
-					{cache.audio && (
+					{gallery.cacheList[0]?.audio && (
 						<div className="mb-2">
 							<audio
 								controls
-								src={cache.audio}
+								src={gallery.cacheList[0].audio}
 								className="w-full rounded-full shadow-md"
 							/>
 						</div>
@@ -314,22 +316,27 @@ const CacheList = ({
 
 					<div className="mt-2 flex space-x-2">
 						<button
-							onClick={() => onEdit(cache)}
+							onClick={() => onEdit(gallery)}
 							className="bg-yellow-500 text-white px-4 py-2 rounded-full shadow-md"
 						>
 							Edit
 						</button>
 						<button
-							onClick={() => onDelete(cache.id)}
+							onClick={() => onDelete(gallery.id)}
 							className="bg-red-500 text-white px-4 py-2 rounded-full shadow-md"
 						>
 							Delete
+						</button>
+						<button
+							onClick={() => onAddCache(gallery)}
+							className="bg-green-500 text-white px-4 py-2 rounded-full shadow-md"
+						>
+							Add Cache
 						</button>
 					</div>
 				</div>
 			))}
 
-			{/* Modal for viewing images or audio */}
 			{modalContent && (
 				<div
 					className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
@@ -366,9 +373,79 @@ const CacheList = ({
 	);
 };
 
-// ManagePage
+// Modal Component for adding an additional cache to a gallery
+const AddCacheModal = ({
+	gallery,
+	user,
+	onClose,
+	onCacheAdded,
+}: {
+	gallery: CacheGallery;
+	user: { uid: string };
+	onClose: () => void;
+	onCacheAdded: () => void;
+}) => {
+	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		const newCacheData: Omit<Cache, "id"> = {
+			updatedAt: Date.now(),
+			updatedByUid: user.uid,
+		};
+		// Only add properties if they exist
+		if (imageBlob) {
+			newCacheData.image = await blobToBase64(imageBlob);
+		}
+		if (audioBlob) {
+			newCacheData.audio = await blobToBase64(audioBlob);
+		}
+		try {
+			await addCacheToGallery(gallery.id, newCacheData);
+			onCacheAdded();
+			onClose();
+		} catch (error) {
+			console.error("Error adding cache:", error);
+			alert("Failed to add cache.");
+		}
+	};
+
+	return (
+		<div
+			className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+			onClick={onClose}
+		>
+			<div
+				className="bg-white p-4 rounded relative"
+				onClick={(e) => e.stopPropagation()}
+			>
+				<button
+					onClick={onClose}
+					className="absolute top-0 right-0 m-2 text-gray-700"
+				>
+					X
+				</button>
+				<h2 className="text-xl font-bold mb-4">Add Cache to Gallery</h2>
+				<form onSubmit={handleSubmit}>
+					<ImageUploader setImageBlob={setImageBlob} />
+					<AudioRecorder setAudioBlob={setAudioBlob} />
+					<button
+						type="submit"
+						className="w-full bg-blue-500 text-white p-2 rounded-full mt-4"
+					>
+						Add Cache
+					</button>
+				</form>
+			</div>
+		</div>
+	);
+};
+
+// ManagePage Component
 export default function ManagePage() {
-	const [caches, setCaches] = useState<Cache[]>([]);
+	const { user } = useAuth();
+	const [galleries, setGalleries] = useState<CacheGallery[]>([]);
 	const [formData, setFormData] = useState<CacheFormInput>({
 		name: "",
 		description: "",
@@ -377,42 +454,74 @@ export default function ManagePage() {
 	});
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-	const [editingCacheId, setEditingCacheId] = useState<string | null>(null);
+	const [editingGalleryId, setEditingGalleryId] = useState<string | null>(
+		null
+	);
+	const [selectedGalleryForNewCache, setSelectedGalleryForNewCache] =
+		useState<CacheGallery | null>(null);
 
-	// Subscribe to caches on component mount
+	// Subscribe to cache galleries on component mount
 	useEffect(() => {
-		const unsubscribe = subscribeToCaches((caches) => setCaches(caches));
+		const unsubscribe = subscribeToCacheGalleries((galleries) =>
+			setGalleries(galleries)
+		);
 		return () => unsubscribe();
 	}, []);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-
-		// Explicitly define the cacheData object
-		const cacheData: Partial<Cache> = {
-			name: formData.name,
-			description: formData.description,
-			lat: parseFloat(formData.lat),
-			lng: parseFloat(formData.lng),
-			createdAt: Date.now(),
-		};
-
-		// Add optional fields (image/audio) if available
-		if (imageBlob) {
-			cacheData.image = await blobToBase64(imageBlob);
+		if (!user) {
+			alert("User not found. Please sign in.");
+			return;
 		}
-		if (audioBlob) {
-			cacheData.audio = await blobToBase64(audioBlob);
-		}
-
-		if (editingCacheId) {
-			await updateCache(editingCacheId, cacheData);
-			setEditingCacheId(null);
+		if (editingGalleryId) {
+			// Update existing gallery
+			await updateCacheGallery(editingGalleryId, {
+				name: formData.name,
+				description: formData.description,
+				lat: parseFloat(formData.lat),
+				lng: parseFloat(formData.lng),
+				updatedCache: {
+					updatedAt: Date.now(),
+					updatedByUid: user.uid,
+					...(imageBlob
+						? { image: await blobToBase64(imageBlob) }
+						: {}),
+					...(audioBlob
+						? { audio: await blobToBase64(audioBlob) }
+						: {}),
+					gifUrl: undefined,
+				},
+			});
+			setEditingGalleryId(null);
 		} else {
-			await createCache(cacheData as Omit<Cache, "id">);
+			// Create new gallery with an initial cache
+			const galleryData: Omit<CacheGallery, "id" | "cacheList"> & {
+				initialCache: Omit<Cache, "id">;
+			} = {
+				name: formData.name,
+				description: formData.description,
+				lat: parseFloat(formData.lat),
+				lng: parseFloat(formData.lng),
+				createdAt: Date.now(),
+				createdByUid: user.uid,
+				expiryDate: Date.now() + 7 * 24 * 60 * 60 * 1000,
+				featured: false,
+				initialCache: {
+					updatedAt: Date.now(),
+					updatedByUid: user.uid,
+					...(imageBlob
+						? { image: await blobToBase64(imageBlob) }
+						: {}),
+					...(audioBlob
+						? { audio: await blobToBase64(audioBlob) }
+						: {}),
+					gifUrl: undefined,
+				},
+			};
+			await createCacheGallery(galleryData);
 		}
-
-		// Reset form
+		// Reset form state
 		setFormData({ name: "", description: "", lat: "", lng: "" });
 		setImageBlob(null);
 		setAudioBlob(null);
@@ -441,34 +550,43 @@ export default function ManagePage() {
 		}
 	};
 
-	const handleEdit = (cache: Cache) => {
+	const handleEdit = (gallery: CacheGallery) => {
 		setFormData({
-			name: cache.name,
-			description: cache.description,
-			lat: cache.lat.toString(),
-			lng: cache.lng.toString(),
+			name: gallery.name,
+			description: gallery.description,
+			lat: gallery.lat.toString(),
+			lng: gallery.lng.toString(),
 		});
-		setEditingCacheId(cache.id);
+		setEditingGalleryId(gallery.id);
 	};
 
 	const handleDelete = async (id: string) => {
-		if (confirm("Are you sure you want to delete this cache?")) {
-			await deleteCache(id);
-			if (editingCacheId === id) {
+		if (confirm("Are you sure you want to delete this gallery?")) {
+			await deleteCacheGallery(id);
+			if (editingGalleryId === id) {
 				cancelEdit();
 			}
 		}
 	};
 
 	const cancelEdit = () => {
-		setEditingCacheId(null);
+		setEditingGalleryId(null);
 		setFormData({ name: "", description: "", lat: "", lng: "" });
 		setImageBlob(null);
 		setAudioBlob(null);
 	};
 
+	const handleAddCache = (gallery: CacheGallery) => {
+		setSelectedGalleryForNewCache(gallery);
+	};
+
+	const handleCacheAdded = () => {
+		// Optionally, refresh galleries after adding a cache.
+		// For now, our subscription should pick up the change.
+	};
+
 	return (
-		<PageView title="Manage Caches">
+		<PageView title="Manage Cache Galleries">
 			<CacheForm
 				formData={formData}
 				setFormData={setFormData}
@@ -476,14 +594,23 @@ export default function ManagePage() {
 				handleFillLocation={handleFillLocation}
 				setImageBlob={setImageBlob}
 				setAudioBlob={setAudioBlob}
-				editing={!!editingCacheId}
+				editing={!!editingGalleryId}
 				cancelEdit={cancelEdit}
 			/>
 			<CacheList
-				caches={caches}
+				galleries={galleries}
 				onEdit={handleEdit}
 				onDelete={handleDelete}
+				onAddCache={handleAddCache}
 			/>
+			{selectedGalleryForNewCache && user && (
+				<AddCacheModal
+					gallery={selectedGalleryForNewCache}
+					user={user}
+					onClose={() => setSelectedGalleryForNewCache(null)}
+					onCacheAdded={handleCacheAdded}
+				/>
+			)}
 		</PageView>
 	);
 }

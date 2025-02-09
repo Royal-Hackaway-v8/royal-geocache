@@ -2,7 +2,7 @@
 
 import { MarkerLocation } from "@/components/ui/Map";
 import PageView from "@/components/ui/PageView";
-import { subscribeToCaches } from "@/services/cacheService";
+import { subscribeToCacheGalleries } from "@/services/cacheService";
 import { useEffect, useState } from "react";
 import { Cache } from "@/types";
 import ARCapsule from "@/components/ar/ARCapsule";
@@ -12,17 +12,16 @@ export default function CachePage() {
 	const [cacheMarkers, setCacheMarkers] = useState<MarkerLocation[]>([]);
 
 	useEffect(() => {
-		const unsubscribe = subscribeToCaches((caches: Cache[]) => {
-			// Map caches to MarkerLocation format
-			const markersFromCaches: MarkerLocation[] = caches.map((cache) => ({
-				id: cache.id,
-				name: cache.name,
-				description: cache.description,
-				position: [cache.lat, cache.lng] as [number, number],
+		const unsubscribe = subscribeToCacheGalleries((galleries) => {
+			const markers = galleries.map((gallery) => ({
+				id: gallery.id,
+				name: gallery.name,
+				description: gallery.description,
+				position: [gallery.lat, gallery.lng] as [number, number],
 			}));
-			setCacheMarkers(markersFromCaches);
+			setCacheMarkers(markers);
 		});
-		return unsubscribe;
+		return () => unsubscribe();
 	}, []);
 
 	return (

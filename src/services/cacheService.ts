@@ -1,39 +1,83 @@
 import { ref, onValue, push, set, update, remove } from "firebase/database";
 import { DB } from "@/config/firebase";
-import { Cache } from "@/types";
+import { CacheGallery, Cache } from "@/types";
 
-// Subscribe to caches and invoke a callback with an array of Cache objects
-export const subscribeToCaches = (callback: (caches: Cache[]) => void) => {
-	const cachesRef = ref(DB, "caches/");
-	const unsubscribe = onValue(cachesRef, (snapshot) => {
+// Utility function to remove undefined properties
+const sanitizeObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
+// Subscribe to cache galleries
+export const subscribeToCacheGalleries = (
+	callback: (galleries: CacheGallery[]) => void
+) => {
+	const galleriesRef = ref(DB, "cacheGalleries/");
+	return onValue(galleriesRef, (snapshot) => {
 		const data = snapshot.val();
 		if (data) {
-			const caches = Object.entries(data).map(([id, cache]) => ({
-				...(cache as Cache),
-				id,
+			const galleries = Object.entries(data).map(([id, gallery]) => ({
+				...(gallery as CacheGallery),
+				id, // Assign Firebase key as the id
 			}));
-			callback(caches);
+			callback(galleries);
 		} else {
 			callback([]);
 		}
 	});
-	return unsubscribe;
 };
 
-// Create a new cache entry
-export const createCache = async (cacheData: Omit<Cache, "id">) => {
-	const newCacheRef = push(ref(DB, "caches/"));
-	await set(newCacheRef, cacheData);
+// Create a new cache gallery (with an initial cache)
+// We omit the "id" field because Firebase generates it for us.
+export const createCacheGallery = async (
+	galleryData: Omit<CacheGallery, "id" | "cacheList"> & {
+		initialCache: Omit<Cache, "id">;
+	}
+) => {
+	const newGalleryRef = push(ref(DB, "cacheGalleries/"));
+	const { initialCache, ...galleryInfo } = galleryData;
+
+	// Sanitize the initial cache to remove undefined values
+	const sanitizedCache = sanitizeObject({
+		updatedAt: Date.now(),
+		updatedByUid: galleryInfo.createdByUid,
+		image: initialCache.image,
+		audio: initialCache.audio,
+		gifUrl: initialCache.gifUrl,
+	});
+
+	const newGallery: Omit<CacheGallery, "id"> = {
+		...galleryInfo,
+		cacheList: [sanitizedCache],
+	};
+	await set(newGalleryRef, newGallery);
 };
 
-// Update an existing cache entry
-export const updateCache = async (id: string, cacheData: Partial<Cache>) => {
-	const cacheRef = ref(DB, `caches/${id}`);
-	await update(cacheRef, cacheData);
+// Update an existing cache gallery (and optionally update the first cache)
+export const updateCacheGallery = async (
+	id: string,
+	galleryData: Partial<Omit<CacheGallery, "id" | "cacheList">> & {
+		updatedCache?: Partial<Omit<Cache, "id">>;
+	}
+) => {
+	const galleryRef = ref(DB, `cacheGalleries/${id}`);
+	if (galleryData.updatedCache) {
+		galleryData.updatedCache.updatedAt = Date.now();
+		galleryData.updatedCache = sanitizeObject(galleryData.updatedCache);
+	}
+	await update(galleryRef, galleryData);
 };
 
-// Delete a cache entry
-export const deleteCache = async (id: string) => {
-	const cacheRef = ref(DB, `caches/${id}`);
-	await remove(cacheRef);
+// Delete a cache gallery
+export const deleteCacheGallery = async (id: string) => {
+	const galleryRef = ref(DB, `cacheGalleries/${id}`);
+	await remove(galleryRef);
+};
+
+// Add a new cache to an existing gallery
+export const addCacheToGallery = async (
+	galleryId: string,
+	newCache: Omit<Cache, "id">
+) => {
+	const cacheListRef = ref(DB, `cacheGalleries/${galleryId}/cacheList`);
+	const sanitizedCache = sanitizeObject(newCache);
+	const newCacheRef = push(cacheListRef);
+	await set(newCacheRef, sanitizedCache);
 };
