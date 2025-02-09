@@ -168,20 +168,25 @@ const Map: React.FC<MapProps> = ({
 		);
 	}, [userLocation]);
 
-	// Update map markers based on distance and selected galleries
+	// Update map markers based on distance and selection state
 	useEffect(() => {
 		if (!mapRef.current || !markersLayerRef.current || !markerWithDistance)
 			return;
 		markersLayerRef.current.clearLayers();
 		markerWithDistance.forEach((marker) => {
-			// Render marker only if its gallery is selected
-			if (!selectedGalleries.has(marker.id)) return;
+			// Compute dynamic color based on distance
 			const scalar =
 				(1 / Math.pow(WITHIN_RANGE_RADIUS, 1 / 3)) *
 				Math.pow(marker.distanceToPlayer, 1 / 3);
 			const RED = (scalar > 1 ? 1 : scalar) * 255;
 			const GREEN = (1 - (scalar > 1 ? 1 : scalar)) * 255;
-			const iconColour = `rgb(${RED}, ${GREEN}, 80)`;
+			const computedColor = `rgb(${RED}, ${GREEN}, 80)`;
+
+			// Use computed color if selected, else gray
+			const iconColour = selectedGalleries.has(marker.id)
+				? computedColor
+				: "gray";
+
 			const iconSvg = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="${iconColour}" width="30" height="30">
           <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
@@ -259,9 +264,6 @@ const Map: React.FC<MapProps> = ({
 					// Determine checkbox status for the group
 					const groupGalleryIds = group.groupList;
 					const allSelected = groupGalleryIds.every((id) =>
-						selectedGalleries.has(id)
-					);
-					const someSelected = groupGalleryIds.some((id) =>
 						selectedGalleries.has(id)
 					);
 
