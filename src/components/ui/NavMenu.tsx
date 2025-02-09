@@ -17,7 +17,6 @@ import {
 import { subscribeToUser } from "@/services/userService";
 import { AppUser } from "@/types";
 import { GiPodiumWinner } from "react-icons/gi";
-import router from "next/router";
 
 interface NavMenuLinkProps {
 	href: string;
@@ -33,14 +32,14 @@ function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 	return (
 		<Link href={href}>
 			<div
-				className={`${className} px-3 py-2 rounded-full cursor-pointer transition duration-300 flex flex-col items-center gap-2 ${
+				className={`${className} w-24 px-3 py-2 rounded-full cursor-pointer transition duration-300 flex flex-col items-center gap-1 text-center ${
 					isActive
 						? "bg-white/70 text-green-400"
 						: "text-white hover:bg-white/20"
 				}`}
 			>
 				{icon}
-				{label}
+				<span className="whitespace-nowrap">{label}</span>
 			</div>
 		</Link>
 	);
@@ -68,8 +67,8 @@ export default function NavMenu() {
 	}, [user]);
 
 	return (
-		<nav className="fixed top-4 w-full flex justify-center z-50 pointer-events-none">
-			<div className="w-fit bg-black text-white backdrop-blur-lg flex gap-1 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto">
+		<nav className="fixed top-4 w-full flex justify-center z-50 pointer-events-none px-2">
+			<div className="max-w-[90%] w-fit bg-black text-white backdrop-blur-lg flex gap-1 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto overflow-x-auto whitespace-nowrap">
 				<NavMenuLink
 					href="/"
 					label="CacheGrab"
