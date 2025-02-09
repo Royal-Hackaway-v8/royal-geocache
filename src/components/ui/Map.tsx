@@ -46,6 +46,11 @@ const ReactLeafletMap: React.FC<
 	userLocation,
 	selectedGalleries,
 }) => {
+	const [mounted, setMounted] = useState<boolean>(false);
+	useEffect(() => setMounted(true), []);
+
+	if (!mounted) return null;
+
 	// Helper function to create a custom icon from an SVG color.
 	const createCustomIcon = (iconColour: string) => {
 		const iconSvg = `
