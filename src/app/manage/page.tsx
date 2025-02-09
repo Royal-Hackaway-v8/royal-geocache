@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import PageView from "@/components/ui/PageView";
-import { CacheGallery, Cache, CacheGroup } from "@/types";
+import { CacheGallery, Cache, CacheGroup, AppUser } from "@/types";
 import {
 	subscribeToCacheGalleries,
 	createCacheGallery,
@@ -15,6 +15,7 @@ import {
 	deleteCacheGroup,
 } from "@/services/cacheService";
 import { useAuth } from "@/context/AuthContext";
+import { subscribeToUser } from "@/services/userService"; // to get user data
 
 // Utility: Convert a Blob to Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> =>
@@ -334,49 +335,80 @@ const CacheList = ({
 					<p className="text-gray-600 text-sm">
 						Created: {formatTimestamp(gallery.createdAt)}
 					</p>
-					{gallery.cacheList[0]?.image && (
-						<div
-							className="cursor-pointer hover:opacity-75 mb-2"
-							onClick={() =>
-								handleOpenModal(
-									"image",
-									gallery.cacheList[0].image!
-								)
-							}
-						>
-							<img
-								src={gallery.cacheList[0].image}
-								alt="Gallery Preview"
-								className="max-w-xs"
-							/>
-						</div>
-					)}
-					{gallery.cacheList[0]?.gifUrl && (
-						<div
-							className="cursor-pointer hover:opacity-75 mb-2"
-							onClick={() =>
-								handleOpenModal(
-									"image",
-									gallery.cacheList[0].gifUrl!
-								)
-							}
-						>
-							<img
-								src={gallery.cacheList[0].gifUrl}
-								alt="Gallery GIF Preview"
-								className="max-w-xs"
-							/>
-						</div>
-					)}
-					{gallery.cacheList[0]?.audio && (
-						<div className="mb-2">
-							<audio
-								controls
-								src={gallery.cacheList[0].audio}
-								className="w-full rounded-full shadow-md"
-							/>
-						</div>
-					)}
+					{/* Loop over all caches in the gallery */}
+					<div className="mt-4">
+						<h4 className="text-lg font-semibold">Caches:</h4>
+						{gallery.cacheList && gallery.cacheList.length > 0 ? (
+							gallery.cacheList.map((cache, index) => {
+								// Optional: log cache.image for debugging
+								console.log(
+									"Rendering cache image:",
+									cache.image
+								);
+								return (
+									<div
+										key={index}
+										className="p-2 border rounded mb-2"
+									>
+										{cache.image &&
+										typeof cache.image === "string" &&
+										cache.image.startsWith("data:") ? (
+											<div
+												className="cursor-pointer hover:opacity-75 mb-2"
+												onClick={() =>
+													handleOpenModal(
+														"image",
+														cache.image as string
+													)
+												}
+											>
+												<img
+													src={cache.image as string}
+													alt="Cache Image"
+													className="max-w-xs"
+												/>
+											</div>
+										) : null}
+										{cache.gifUrl && (
+											<div
+												className="cursor-pointer hover:opacity-75 mb-2"
+												onClick={() =>
+													handleOpenModal(
+														"image",
+														cache.gifUrl as string
+													)
+												}
+											>
+												<img
+													src={cache.gifUrl as string}
+													alt="Cache GIF"
+													className="max-w-xs"
+												/>
+											</div>
+										)}
+										{cache.audio && (
+											<div className="mb-2">
+												<audio
+													controls
+													src={cache.audio}
+													className="w-full rounded-full shadow-md"
+												/>
+											</div>
+										)}
+										<div className="text-xs text-gray-500">
+											Updated:{" "}
+											{formatTimestamp(cache.updatedAt)}{" "}
+											by {cache.updatedByUid}
+										</div>
+									</div>
+								);
+							})
+						) : (
+							<p className="text-gray-500">
+								No caches in this gallery.
+							</p>
+						)}
+					</div>
 					<div className="mt-2 flex space-x-2">
 						<button
 							onClick={() => onEdit(gallery)}
@@ -720,6 +752,17 @@ export default function ManagePage() {
 		);
 		return () => unsubscribe();
 	}, []);
+
+	// Subscribe to user data to get cachesCollected
+	const [userData, setUserData] = useState<AppUser | null>(null);
+	useEffect(() => {
+		if (user) {
+			const unsubscribe = subscribeToUser(user.uid, (data) =>
+				setUserData(data)
+			);
+			return () => unsubscribe();
+		}
+	}, [user]);
 
 	const handleCacheAdded = () => {
 		setCacheAddedSuccess("Cache added successfully!");
