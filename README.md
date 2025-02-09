@@ -1,110 +1,61 @@
-# royal-geocacher
+# CacheGrab &mdash; Explore, Discover, Collect!
 
-chicken nuggets
+## 🌍 Inspiration
 
-/cache/[id] - Individual Cache Details
+We wanted to create an immersive, real-world treasure hunt that blends technology with adventure. Traditional geocaching is fun but often requires physical containers &mdash; we asked ourselves, what if geocaching could be entirely digital?
 
--   View a single cache’s full details.
--   Show the exact location on the map.
--   Display images/audio if available.
+With CacheGrab, users can hide &amp; seek virtual caches in real-world locations on our campus and further, unlocking them by physically visiting the spot. We loved the idea of combining location-based gaming with community-driven content to create a fun and engaging outdoor experience.
 
-/profile - User Profile Page
+## 📍 What it does
 
--   If you’re using authentication, allow users to see/edit their saved caches.
--   Show caches a user has created.
+CacheGrab is a location-based geocaching app where users can:
 
-/leaderboard - Optional Gamification
+-   Drop virtual caches (with audio snippets, images, messages, GIFs) at specific real-world locations.
+-   Explore the world by hunting for hidden caches and unlocking their contents when nearby.
+-   Compete and collaborate with others by collecting caches &amp; tracking discoveries on a leaderboard.
 
--   Rank users by caches found or created.
--   Encourage engagement with a points system.
+## 🛠️ How we built it
 
-/not-found - Custom 404 Page
+CacheGrab was developed using a full-stack approach:
 
--   Display a custom error page for invalid routes.
+-   **Frontend**: Next.js (React), TailwindCSS for UI styling.
+-   **Backend**: Firebase (Realtime Database & Auth) for storing user data, caches, and authentication.
+-   **Maps & Location**: Leaflet.js and browser Geolocation API for tracking users and displaying caches.
+-   **Hosting**: Vercel for seamless frontend deployment.
 
-/settings - App Preferences
+We ensured a smooth user experience by implementing real-time updates, allowing players to see caches appear as they explore.
 
--   Allow users to toggle dark mode, notification settings, etc.
+## 🚧 Challenges we ran into
 
-[???](https://prod.liveshare.vsengsaas.visualstudio.com/join?DF9BDAD2E61AEBA73A281FE8CFE7BA73DF78)
+-   **Ensuring location accuracy**: Mobile geolocation isn’t always precise, so we had to fine-tune the detection radius for unlocking caches.
+-   **Data security & user privacy**: Since CacheGrab involves geolocation, we needed to secure user data while ensuring fair play.
+-   **Real-time updates**: Implementing cache discovery and leaderboard updates in real-time required efficient database queries and optimization.
+-   **Integrating AR/XR**: We were hoping to bring the cameras that everyone has on their phone into the action of viewing cache galleries.
+-   **Live Share**: Over time we realized that Live Share was so flaky & janky because of the uni's networks, as well as various other variables (we also have numerous complaints about its UX!)
+-   **Ngrok**: We frequently reached the limits for Ngrok due to the nature of our project and development set up &mdash; this means that
 
-bigger hairy sweaty balls on feet covered in mushrooms
+## 🏆 Accomplishments that we’re proud of
 
-# nextjs-firebase-app
+-   Successfully implemented a functional geocaching system that allows users to place and discover caches dynamically.
+-   Integrated Google Sign-In authentication for seamless user onboarding.
+-   Built an interactive and intuitive UI that makes exploring easy and fun.
+-   Designed a scalable database structure for efficient storage of user caches and retrieval queries.
+-   Created a working prototype within the hackathon timeframe that feels polished and ready to expand!
 
-This project is a Next.js application integrated with Tailwind CSS and Firebase, designed to provide a seamless user experience with authentication and dynamic content.
+## 📚 What we learned
 
-## Features
+-   Efficient database structuring is crucial when dealing with real-time location-based interactions.
+-   Firebase Realtime Database works great for live updates, but optimizing queries is key to keeping performance smooth.
+-   UX matters in location-based apps &amp; an intuitive and of course a map experience improve engagement.
+-   Collaboration is everything! Working as a team helped us brainstorm creative ideas and solve complex problems efficiently.
 
--   **Next.js**: A React framework for building server-side rendered applications.
--   **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
--   **Firebase**: A platform for building web and mobile applications, providing services like authentication and Firestore.
+## 🚀 What’s next for CacheGrab
 
-## Project Structure
+We’re excited about expanding CacheGrab with:
 
-```
-nextjs-firebase-app
-├── src
-│   ├── app
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components
-│   │   ├── auth
-│   │   │   └── AuthProvider.tsx
-│   │   └── ui
-│   │       └── index.tsx
-│   ├── config
-│   │   └── firebase.ts
-│   ├── hooks
-│   │   └── useAuth.ts
-│   ├── lib
-│   │   └── firebase.ts
-│   └── types
-│       └── index.ts
-├── public
-├── tailwind.config.js
-├── postcss.config.js
-├── next.config.js
-├── package.json
-├── .env.local
-├── .gitignore
-└── README.md
-```
+-   Augmented Reality (AR) integration to display virtual caches in the real world through the camera.
+-   User-generated challenges where players can create custom quests or riddles to unlock caches.
+-   Badges to gamify the experience and encourage friendly competition.
+-   App for iOS and Android to improve accessibility and performance.
 
-## Setup Instructions
-
-1. **Clone the repository**:
-
-    ```bash
-    git clone <repository-url>
-    cd nextjs-firebase-app
-    ```
-
-2. **Install dependencies**:
-
-    ```bash
-    npm install
-    ```
-
-3. **Configure Firebase**:
-
-    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
-    - Add your Firebase configuration to `src/config/firebase.ts`.
-
-4. **Run the development server**:
-
-    ```bash
-    npm run dev
-    ```
-
-5. **Open your browser**:
-   Navigate to `http://localhost:3000` to view the application.
-
-## Usage
-
--   The application provides authentication features through the `AuthProvider` component.
--   You can create and manage dynamic content using Firebase services.
-
-## Contributing
-
-Feel free to submit issues or pull requests to improve the project!
+CacheGrab is just getting started, and we can’t wait to take geocaching to the next level!
