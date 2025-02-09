@@ -422,7 +422,7 @@ const CacheList: React.FC<CacheListProps> = ({
 														cacheId
 													)
 												}
-												className="mt-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-sm text-xs"
+												className="mt-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md text-xs"
 											>
 												Delete Cache
 											</button>
@@ -997,7 +997,7 @@ export default function ManagePage() {
 
 	return (
 		<PageView title="Manage Galleries & Groups">
-			<div className="flex flex-col md:flex-row gap-4 mx-4">
+			<div className="flex flex-col md:flex-row gap-4 mx-4 h-full max-h-[20rem] overflow-scroll">
 				{/* Galleries Management Panel */}
 				<div className="flex-1">
 					{cacheAddedSuccess && (
