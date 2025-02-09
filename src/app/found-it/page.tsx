@@ -13,6 +13,7 @@ import { CACHING_THRESHOLD } from "@/lib/constants";
 import { FaInfoCircle } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
 import { useAuth } from "@/context/AuthContext";
+import { addGalleryToUserCachesCollected } from "@/services/userService";
 
 const AudioRecorder = ({
 	setAudioBlob,
@@ -200,7 +201,6 @@ export default function FoundItPage() {
 				if (!foundGallery) {
 					router.push("/map");
 				} else {
-					// Convert cacheList to an array of Cache objects
 					const cacheList = Array.isArray(foundGallery.cacheList)
 						? foundGallery.cacheList
 						: (Object.values(
@@ -229,9 +229,15 @@ export default function FoundItPage() {
 	const [errorMsg, setErrorMsg] = useState("");
 	const [hasVisited, setHasVisited] = useState(false);
 
+	// Updated markGalleryAsVisited now updates the user's cachesCollected in the DB
 	const markGalleryAsVisited = async (galleryId: string) => {
-		console.log("Marking gallery as visited:", galleryId);
-		setHasVisited(true);
+		if (!user) return;
+		try {
+			await addGalleryToUserCachesCollected(user.uid, galleryId);
+			setHasVisited(true);
+		} catch (error) {
+			console.error("Failed to update user's cachesCollected:", error);
+		}
 	};
 
 	const handleAddCache = async (e: React.FormEvent) => {
@@ -273,7 +279,6 @@ export default function FoundItPage() {
 				<p>Loading...</p>
 			) : (
 				<div className="container mx-auto p-4 space-y-6">
-					{/* Gallery Header Card */}
 					<div className="bg-gray-100 p-4 rounded-xl shadow">
 						<h1 className="text-2xl font-bold mb-2">
 							{cacheGallery.name}
@@ -297,7 +302,6 @@ export default function FoundItPage() {
 						</div>
 					</div>
 
-					{/* Prompt Card for Unvisited Gallery */}
 					{!hasVisited && (
 						<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
 							<FaInfoCircle size={20} className="my-auto" />
@@ -308,7 +312,6 @@ export default function FoundItPage() {
 						</div>
 					)}
 
-					{/* Add Cache Form Card */}
 					<div className="bg-gray-100 p-4 rounded-xl shadow">
 						<h2 className="text-xl font-bold mb-2">
 							Add a New Cache
@@ -356,7 +359,6 @@ export default function FoundItPage() {
 						)}
 					</div>
 
-					{/* Cache List Card */}
 					{hasVisited ? (
 						<div className="bg-white p-4 rounded-xl shadow">
 							<h2 className="text-xl font-bold mb-2">Caches</h2>

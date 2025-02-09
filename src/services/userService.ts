@@ -43,3 +43,21 @@ export const getUser = async (uid: string): Promise<AppUser | null> => {
 	const snapshot = await get(userRef);
 	return snapshot.exists() ? snapshot.val() : null;
 };
+
+// Add a gallery ID to the user's cachesCollected array if not already present
+export const addGalleryToUserCachesCollected = async (
+	uid: string,
+	galleryId: string
+) => {
+	const userRef = ref(DB, `users/${uid}`);
+	const snapshot = await get(userRef);
+	const userData = snapshot.exists() ? snapshot.val() : null;
+	let updatedCaches: string[] = [];
+	if (userData && Array.isArray(userData.cachesCollected)) {
+		updatedCaches = userData.cachesCollected;
+	}
+	if (!updatedCaches.includes(galleryId)) {
+		updatedCaches.push(galleryId);
+	}
+	await update(userRef, { cachesCollected: updatedCaches });
+};
