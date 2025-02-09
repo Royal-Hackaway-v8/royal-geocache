@@ -273,14 +273,14 @@ const Map: React.FC<MapProps> = ({
 	};
 
 	return (
-		<div className="flex w-full">
+		<div className="flex flex-wrap w-full gap-4 justify-center mt-12">
 			{/* Map Container */}
-			<div className="overflow-hidden rounded-xl shadow-lg w-full ml-5">
+			<div className="overflow-hidden rounded-xl shadow-lg w-full max-w-4xl">
 				<div id="map" className="h-96 w-full" />
 			</div>
 
 			{/* Sidebar Container */}
-			<div className="w-80 mx-5 p-5 bg-white flex flex-col rounded-xl shadow-md">
+			<div className="w-80 p-4 bg-white flex flex-col rounded-xl shadow-md">
 				<h2 className="text-lg font-semibold mb-4">Cache Groups</h2>
 				{cacheGroups.map((group) => {
 					// Determine checkbox status for the group
