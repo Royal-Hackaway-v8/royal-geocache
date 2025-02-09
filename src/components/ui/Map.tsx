@@ -85,7 +85,7 @@ const Map: React.FC<MapProps> = ({
 			{ enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
 		);
 		return () => navigator.geolocation.clearWatch(watchId);
-	}, []);
+	}, [LEAFLET_CLIENT]);
 
 	// Subscribe to cache galleries from RTDB and set cache markers
 	useEffect(() => {
