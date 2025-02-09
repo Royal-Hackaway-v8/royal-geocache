@@ -16,6 +16,7 @@ import {
 
 import { subscribeToUser } from "@/services/userService";
 import { AppUser } from "@/types";
+import { GiPodiumWinner } from "react-icons/gi";
 import router from "next/router";
 
 interface NavMenuLinkProps {
@@ -80,6 +81,11 @@ export default function NavMenu() {
 					href="/about"
 					label="About"
 					icon={<FaInfoCircle />}
+				/>
+				<NavMenuLink
+					href="/leaderboard"
+					label="Leaderboard"
+					icon={<GiPodiumWinner />}
 				/>
 
 				{/* Only show 'Manage' if the user is staff */}
