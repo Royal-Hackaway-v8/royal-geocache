@@ -13,9 +13,17 @@ import {
 	updateCacheGroup,
 	createCacheGroup,
 	deleteCacheGroup,
+	deleteCacheFromGallery,
 } from "@/services/cacheService";
 import { useAuth } from "@/context/AuthContext";
-import { subscribeToUser } from "@/services/userService"; // to get user data
+import { subscribeToUser } from "@/services/userService";
+
+// ------------------
+// Extend AppUser to include count
+// (Alternatively, update the AppUser interface in "@/types")
+interface AppUserWithCount extends AppUser {
+	count: number;
+}
 
 // Utility: Convert a Blob to Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> =>
@@ -173,6 +181,7 @@ const ImageUploader = ({
 	);
 };
 
+// Note the updated type for handleSubmit: returns Promise<void>
 const CacheForm = ({
 	formData,
 	setFormData,
@@ -185,7 +194,7 @@ const CacheForm = ({
 }: {
 	formData: CacheFormInput;
 	setFormData: React.Dispatch<React.SetStateAction<CacheFormInput>>;
-	handleSubmit: (e: React.FormEvent) => void;
+	handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 	handleFillLocation: () => void;
 	setImageBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
 	setAudioBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
@@ -279,16 +288,21 @@ const CacheForm = ({
 	);
 };
 
-const CacheList = ({
-	galleries,
-	onEdit,
-	onDelete,
-	onAddCache,
-}: {
+// ------------------------------
+interface CacheListProps {
 	galleries: CacheGallery[];
 	onEdit: (gallery: CacheGallery) => void;
 	onDelete: (id: string) => void;
 	onAddCache: (gallery: CacheGallery) => void;
+	onDeleteCache: (galleryId: string, cacheId: string) => void;
+}
+
+const CacheList: React.FC<CacheListProps> = ({
+	galleries,
+	onEdit,
+	onDelete,
+	onAddCache,
+	onDeleteCache,
 }) => {
 	const [modalContent, setModalContent] = useState<{
 		type: "image" | "audio";
@@ -335,74 +349,87 @@ const CacheList = ({
 					<p className="text-gray-600 text-sm">
 						Created: {formatTimestamp(gallery.createdAt)}
 					</p>
-					{/* Loop over all caches in the gallery */}
 					<div className="mt-4">
 						<h4 className="text-lg font-semibold">Caches:</h4>
 						{gallery.cacheList && gallery.cacheList.length > 0 ? (
-							gallery.cacheList.map((cache, index) => {
-								// Optional: log cache.image for debugging
-								console.log(
-									"Rendering cache image:",
-									cache.image
-								);
-								return (
-									<div
-										key={index}
-										className="p-2 border rounded mb-2"
-									>
-										{cache.image &&
-										typeof cache.image === "string" &&
-										cache.image.startsWith("data:") ? (
-											<div
-												className="cursor-pointer hover:opacity-75 mb-2"
+							gallery.cacheList.map(
+								(cache: Cache & { id?: string }, index) => {
+									const cacheId =
+										cache.id || index.toString();
+									return (
+										<div
+											key={cacheId}
+											className="p-2 border rounded mb-2"
+										>
+											{cache.image &&
+											typeof cache.image === "string" ? (
+												<div
+													className="cursor-pointer hover:opacity-75 mb-2"
+													onClick={() =>
+														handleOpenModal(
+															"image",
+															cache.image as string
+														)
+													}
+												>
+													<img
+														src={cache.image}
+														alt="Cache Image"
+														className="max-w-xs"
+													/>
+												</div>
+											) : null}
+											{cache.gifUrl &&
+											typeof cache.gifUrl === "string" ? (
+												<div
+													className="cursor-pointer hover:opacity-75 mb-2"
+													onClick={() =>
+														handleOpenModal(
+															"image",
+															cache.gifUrl as string
+														)
+													}
+												>
+													<img
+														src={cache.gifUrl}
+														alt="Cache GIF"
+														className="max-w-xs"
+													/>
+												</div>
+											) : null}
+											{cache.audio &&
+												typeof cache.audio ===
+													"string" && (
+													<div className="mb-2">
+														<audio
+															controls
+															src={cache.audio}
+															className="w-full rounded-full shadow-md"
+														/>
+													</div>
+												)}
+											<div className="text-xs text-gray-500">
+												Updated:{" "}
+												{formatTimestamp(
+													cache.updatedAt
+												)}{" "}
+												by {cache.updatedByUid}
+											</div>
+											<button
 												onClick={() =>
-													handleOpenModal(
-														"image",
-														cache.image as string
+													onDeleteCache(
+														gallery.id,
+														cacheId
 													)
 												}
+												className="mt-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-sm text-xs"
 											>
-												<img
-													src={cache.image as string}
-													alt="Cache Image"
-													className="max-w-xs"
-												/>
-											</div>
-										) : null}
-										{cache.gifUrl && (
-											<div
-												className="cursor-pointer hover:opacity-75 mb-2"
-												onClick={() =>
-													handleOpenModal(
-														"image",
-														cache.gifUrl as string
-													)
-												}
-											>
-												<img
-													src={cache.gifUrl as string}
-													alt="Cache GIF"
-													className="max-w-xs"
-												/>
-											</div>
-										)}
-										{cache.audio && (
-											<div className="mb-2">
-												<audio
-													controls
-													src={cache.audio}
-													className="w-full rounded-full shadow-md"
-												/>
-											</div>
-										)}
-										<div className="text-xs text-gray-500">
-											Updated:{" "}
-											{formatTimestamp(cache.updatedAt)}{" "}
-											by {cache.updatedByUid}
+												Delete Cache
+											</button>
 										</div>
-									</div>
-								);
-							})
+									);
+								}
+							)
 						) : (
 							<p className="text-gray-500">
 								No caches in this gallery.
@@ -482,7 +509,7 @@ const AddCacheModal = ({
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 	const [gifUrl, setGifUrl] = useState("");
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const newCacheData: Omit<Cache, "id"> = {
 			updatedAt: Date.now(),
@@ -548,14 +575,16 @@ const AddCacheModal = ({
 	);
 };
 
-// ---------- Group Management Components ----------
+// ------------------------------
+// Group Management Components
 
 interface GroupFormInput {
 	name: string;
 	description: string;
-	groupList: string[]; // List of CacheGallery IDs
+	groupList: string[];
 }
 
+// Note the updated type for handleGroupSubmit here as well:
 const GroupForm = ({
 	groupForm,
 	setGroupForm,
@@ -566,7 +595,7 @@ const GroupForm = ({
 }: {
 	groupForm: GroupFormInput;
 	setGroupForm: React.Dispatch<React.SetStateAction<GroupFormInput>>;
-	handleGroupSubmit: (e: React.FormEvent) => void;
+	handleGroupSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 	editingGroup: string | null;
 	cancelGroupEdit: () => void;
 	galleries: CacheGallery[];
@@ -698,7 +727,9 @@ const GroupList = ({
 	);
 };
 
-// ---------- Main ManagePage Component ----------
+// ------------------------------
+// Main ManagePage Component
+
 export default function ManagePage() {
 	const { user } = useAuth();
 
@@ -753,17 +784,6 @@ export default function ManagePage() {
 		return () => unsubscribe();
 	}, []);
 
-	// Subscribe to user data to get cachesCollected
-	const [userData, setUserData] = useState<AppUser | null>(null);
-	useEffect(() => {
-		if (user) {
-			const unsubscribe = subscribeToUser(user.uid, (data) =>
-				setUserData(data)
-			);
-			return () => unsubscribe();
-		}
-	}, [user]);
-
 	const handleCacheAdded = () => {
 		setCacheAddedSuccess("Cache added successfully!");
 		setTimeout(() => {
@@ -771,7 +791,7 @@ export default function ManagePage() {
 		}, 3000);
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!user) {
 			alert("User not found. Please sign in.");
@@ -894,7 +914,7 @@ export default function ManagePage() {
 	};
 
 	// Group handlers
-	const handleGroupSubmit = async (e: React.FormEvent) => {
+	const handleGroupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!user) {
 			alert("User not found. Please sign in.");
@@ -1000,6 +1020,19 @@ export default function ManagePage() {
 						onEdit={handleEdit}
 						onDelete={handleDelete}
 						onAddCache={handleAddCache}
+						onDeleteCache={(galleryId, cacheId) => {
+							deleteCacheFromGallery(galleryId, cacheId)
+								.then(() =>
+									console.log("Cache deleted successfully")
+								)
+								.catch((error) => {
+									console.error(
+										"Error deleting cache:",
+										error
+									);
+									alert("Failed to delete cache");
+								});
+						}}
 					/>
 					{selectedGalleryForNewCache && user && (
 						<AddCacheModal

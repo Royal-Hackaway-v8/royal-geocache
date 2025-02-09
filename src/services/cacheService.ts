@@ -129,3 +129,15 @@ export const deleteCacheGroup = async (id: string) => {
 	const groupRef = ref(DB, `cacheGroups/${id}`);
 	await remove(groupRef);
 };
+
+// Delete a cache from a gallery
+export const deleteCacheFromGallery = async (
+	galleryId: string,
+	cacheKey: string
+) => {
+	const cacheRef = ref(
+		DB,
+		`cacheGalleries/${galleryId}/cacheList/${cacheKey}`
+	);
+	await remove(cacheRef);
+};
