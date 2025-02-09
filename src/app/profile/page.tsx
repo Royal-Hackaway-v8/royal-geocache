@@ -4,11 +4,37 @@ import React, { useEffect, useState } from "react";
 import PageView from "@/components/ui/PageView";
 import { useAuth } from "@/context/AuthContext";
 import { subscribeToUser } from "@/services/userService";
-import { AppUser } from "@/types";
+import {
+	subscribeToCacheGalleries,
+	addCacheToGallery,
+} from "@/services/cacheService";
+import { AppUser, CacheGallery } from "@/types";
 
 export default function ProfilePage() {
 	const { user, loading, handleSignOut } = useAuth();
 	const [userData, setUserData] = useState<AppUser | null>(null);
+	const [visitedCacheGalleries, setVisitedCacheGalleries] = useState<
+		CacheGallery[]
+	>([]);
+	// const [galleries, setGalleries] = useState<CacheGallery[]>([]);
+
+	useEffect(() => {
+		if (userData === null) return;
+		const unsubscribe = subscribeToCacheGalleries(
+			(galleries: CacheGallery[]) => {
+				setVisitedCacheGalleries(
+					galleries.filter(
+						(gal) => gal.id in userData.cachesCollected
+					)
+				);
+			}
+		);
+		return () => unsubscribe();
+	}, [userData]);
+
+	useEffect(() => {
+		console.log(visitedCacheGalleries);
+	}, [visitedCacheGalleries]);
 
 	useEffect(() => {
 		if (user) {
@@ -49,6 +75,12 @@ export default function ProfilePage() {
 						{user.displayName || "Anonymous"}
 					</h2>
 					<p className="text-sm">{user.email}</p>
+					<div>
+						<div>Visited Caches</div>
+						{visitedCacheGalleries.map((cg) => {
+							return <div>{cg.name}</div>;
+						})}
+					</div>
 				</div>
 
 				{/* Profile Body */}
