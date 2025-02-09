@@ -6,5 +6,4 @@
 -   [ ] Better UI
 -   [x] /cache/[id] pages
 -   [x] object for
--   [ ] Giphy/GIFs integration
--   [ ]
+-   [x] Giphy/GIFs integration
