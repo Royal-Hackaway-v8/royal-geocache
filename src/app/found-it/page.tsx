@@ -17,7 +17,7 @@ export default function FoundItPage() {
 	const searchParams = useSearchParams();
 	const cacheGalleryID = searchParams.get("cacheGalleryID");
 
-	// THOMAS: User location & distance state
+	// User location & distance state
 	const [userLocation, setUserLocation] = useState<{
 		lon: number;
 		lat: number;
@@ -40,7 +40,6 @@ export default function FoundItPage() {
 
 	// Gallery state
 	const [cacheGallery, setCacheGallery] = useState<CacheGallery | null>(null);
-
 	useEffect(() => {
 		if (!cacheGalleryID) {
 			router.push("/map");
@@ -133,143 +132,127 @@ export default function FoundItPage() {
 						</div>
 					</div>
 
-					{isWithinDistance ? (
-						<>
-							{/* Add Cache Form */}
-							<div className="mb-6">
-								<h2 className="text-xl font-bold mb-2">
-									Add a New Cache
-								</h2>
-								{errorMsg && (
-									<p className="text-red-500 mb-2">
-										{errorMsg}
-									</p>
-								)}
-								<form
-									onSubmit={handleAddCache}
-									className="flex flex-col gap-2"
-								>
-									<input
-										type="text"
-										placeholder="Image URL"
-										className="p-2 border rounded"
-										value={newCacheData.image}
-										onChange={(e) =>
-											setNewCacheData({
-												...newCacheData,
-												image: e.target.value,
-											})
-										}
-									/>
-									<input
-										type="text"
-										placeholder="Audio URL"
-										className="p-2 border rounded"
-										value={newCacheData.audio}
-										onChange={(e) =>
-											setNewCacheData({
-												...newCacheData,
-												audio: e.target.value,
-											})
-										}
-									/>
-									<input
-										type="text"
-										placeholder="GIF URL"
-										className="p-2 border rounded"
-										value={newCacheData.gifUrl}
-										onChange={(e) =>
-											setNewCacheData({
-												...newCacheData,
-												gifUrl: e.target.value,
-											})
-										}
-									/>
-									<button
-										type="submit"
-										className="bg-green-500 text-white p-2 rounded"
-										disabled={adding}
-									>
-										{adding ? "Adding..." : "Add Cache"}
-									</button>
-								</form>
-							</div>
+					{/* Add Cache Form (always rendered) */}
+					<div className="mb-6 border p-4 rounded-xl bg-gray-100">
+						<h2 className="text-xl font-bold mb-2">
+							Add a New Cache
+						</h2>
+						{!isWithinDistance && (
+							<p className="text-red-500 mb-2">
+								You must be within {CACHING_THRESHOLD} km to add
+								a cache.
+							</p>
+						)}
+						{errorMsg && (
+							<p className="text-red-500 mb-2">{errorMsg}</p>
+						)}
+						<form
+							onSubmit={handleAddCache}
+							className="flex flex-col gap-2"
+						>
+							<input
+								type="text"
+								placeholder="Image URL"
+								className="p-2 border rounded"
+								value={newCacheData.image}
+								onChange={(e) =>
+									setNewCacheData({
+										...newCacheData,
+										image: e.target.value,
+									})
+								}
+								disabled={!isWithinDistance}
+							/>
+							<input
+								type="text"
+								placeholder="Audio URL"
+								className="p-2 border rounded"
+								value={newCacheData.audio}
+								onChange={(e) =>
+									setNewCacheData({
+										...newCacheData,
+										audio: e.target.value,
+									})
+								}
+								disabled={!isWithinDistance}
+							/>
+							<input
+								type="text"
+								placeholder="GIF URL"
+								className="p-2 border rounded"
+								value={newCacheData.gifUrl}
+								onChange={(e) =>
+									setNewCacheData({
+										...newCacheData,
+										gifUrl: e.target.value,
+									})
+								}
+								disabled={!isWithinDistance}
+							/>
+							<button
+								type="submit"
+								className="bg-green-500 text-white p-2 rounded-full shadow-lg"
+								disabled={!isWithinDistance || adding}
+							>
+								{adding ? "Adding..." : "Add Cache"}
+							</button>
+						</form>
+					</div>
 
-							{/* Full Cache List */}
-							<div>
-								<h2 className="text-xl font-bold mb-2">
-									Caches
-								</h2>
-								<div className="grid grid-cols-1 gap-4">
-									{cacheGallery.cacheList.map(
-										(cache, index) => (
-											<div
-												key={index}
-												className="bg-white rounded-lg shadow p-4"
-											>
-												<div className="mb-2">
-													<span className="font-semibold">
-														Updated By:
-													</span>{" "}
-													{cache.updatedByUid}
-												</div>
-												<div className="mb-2">
-													<span className="font-semibold">
-														Updated At:
-													</span>{" "}
-													{new Date(
-														cache.updatedAt
-													).toLocaleString()}
-												</div>
-												{cache.image && (
-													<div className="mb-2">
-														<img
-															src={cache.image}
-															alt="Cache Image"
-															className="w-full h-auto rounded"
-														/>
-													</div>
-												)}
-												{cache.gifUrl && (
-													<div className="mb-2">
-														<img
-															src={cache.gifUrl}
-															alt="Cache GIF"
-															className="w-full h-auto rounded"
-														/>
-													</div>
-												)}
-												{cache.audio && (
-													<div className="mb-2">
-														<audio
-															controls
-															className="w-full"
-														>
-															<source
-																src={
-																	cache.audio
-																}
-															/>
-															Your browser does
-															not support the
-															audio element.
-														</audio>
-													</div>
-												)}
-											</div>
-										)
+					{/* Full Cache List */}
+					<div>
+						<h2 className="text-xl font-bold mb-2">Caches</h2>
+						<div className="grid grid-cols-1 gap-4">
+							{cacheGallery.cacheList.map((cache, index) => (
+								<div
+									key={index}
+									className="bg-white rounded-xl shadow p-4"
+								>
+									<div className="mb-2">
+										<span className="font-semibold">
+											Updated By:
+										</span>{" "}
+										{cache.updatedByUid}
+									</div>
+									<div className="mb-2">
+										<span className="font-semibold">
+											Updated At:
+										</span>{" "}
+										{new Date(
+											cache.updatedAt
+										).toLocaleString()}
+									</div>
+									{cache.image && (
+										<div className="mb-2">
+											<img
+												src={cache.image}
+												alt="Cache Image"
+												className="w-full h-auto rounded"
+											/>
+										</div>
+									)}
+									{cache.gifUrl && (
+										<div className="mb-2">
+											<img
+												src={cache.gifUrl}
+												alt="Cache GIF"
+												className="w-full h-auto rounded"
+											/>
+										</div>
+									)}
+									{cache.audio && (
+										<div className="mb-2">
+											<audio controls className="w-full">
+												<source src={cache.audio} />
+												Your browser does not support
+												the audio element.
+											</audio>
+										</div>
 									)}
 								</div>
-							</div>
-						</>
-					) : (
-						// Summary view when not within the threshold
-						<div>
-							<p className="text-lg">
-								Total caches: {cacheGallery.cacheList.length}
-							</p>
+							))}
 						</div>
-					)}
+					</div>
 				</div>
 			)}
 		</PageView>
