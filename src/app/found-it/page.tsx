@@ -449,16 +449,26 @@ function FoundItPageContent() {
 										<AudioRecorder
 											setAudioBlob={setAudioBlob}
 										/>
-										<input
-											type="text"
-											placeholder="GIF URL"
-											className="p-2 border rounded"
-											value={gifUrl}
-											onChange={(e) =>
-												setGifUrl(e.target.value)
-											}
-											disabled={!isWithinDistance}
-										/>
+										<div className="flex gap-2">
+											<a
+												href="https://giphy.com/"
+												target="_blank"
+												rel="noreferrer"
+												className="text-black my-auto"
+											>
+												Giphy is Recommended!
+											</a>
+											<input
+												type="text"
+												placeholder="Giphy GIF URL"
+												className="p-2 border rounded"
+												value={gifUrl}
+												onChange={(e) =>
+													setGifUrl(e.target.value)
+												}
+												disabled={!isWithinDistance}
+											/>
+										</div>
 										<button
 											type="submit"
 											className="bg-green-500 text-white p-2 rounded-full shadow-lg"
