@@ -11,6 +11,7 @@ import PageView from "@/components/ui/PageView";
 import { getDistance } from "@/lib/distance";
 import { CACHING_THRESHOLD, COOLDOWN_PERIOD } from "@/lib/constants";
 import { FaInfoCircle } from "react-icons/fa";
+import { PiSealWarningFill } from "react-icons/pi";
 import { useAuth } from "@/context/AuthContext";
 import {
 	addGalleryToUserCachesCollected,
@@ -463,10 +464,23 @@ function FoundItPageContent() {
 									</form>
 								</div>
 							)}
+							{!isWithinDistance && (
+								<div className="bg-gray-50 border-l-4 border-gray-500 text-red-700 p-4 rounded-xl flex gap-2">
+									<PiSealWarningFill
+										size={20}
+										className="my-auto"
+									/>
+									<span>
+										To submit to this cache gallery, you
+										need to be within {CACHING_THRESHOLD}{" "}
+										meters of its location.
+									</span>
+								</div>
+							)}
 						</>
 
 						{/* Leaderboard (always shown) */}
-						<div>
+						<div className="bg-gray-100 p-4 rounded-xl shadow">
 							<h2 className="text-xl font-bold mb-2">
 								Leaderboard
 							</h2>
