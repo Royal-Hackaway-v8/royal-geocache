@@ -4,7 +4,7 @@
 -   [ ] Tree API
 -   [x] Rainbow coloring of markers
 -   [ ] Better UI
--   [ ] /cache/[id] pages
--   [ ] object for
+-   [x] /cache/[id] pages
+-   [x] object for
 -   [ ] Giphy/GIFs integration
 -   [ ]
