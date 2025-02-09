@@ -110,42 +110,68 @@ export default function GlobalLeaderboardPage() {
 	return (
 		<PageView title="Global Leaderboard">
 			<div className="container mx-auto p-4">
-				<h1 className="text-3xl font-bold mb-4">Global Leaderboard</h1>
 				{leaderboard.length > 0 ? (
-					<table className="min-w-full bg-white border border-gray-200">
-						<thead>
-							<tr>
-								<th className="py-2 px-4 border-b">Rank</th>
-								<th className="py-2 px-4 border-b">Name</th>
-								<th className="py-2 px-4 border-b">
-									Galleries Visited
-								</th>
-								<th className="py-2 px-4 border-b">
-									Caches Left
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{leaderboard.map((entry, index) => (
-								<tr key={entry.uid} className="text-center">
-									<td className="py-2 px-4 border-b">
-										{index + 1}
-									</td>
-									<td className="py-2 px-4 border-b">
-										{entry.displayName}
-									</td>
-									<td className="py-2 px-4 border-b">
-										{entry.galleriesVisited}
-									</td>
-									<td className="py-2 px-4 border-b">
-										{entry.cachesLeft}
-									</td>
+					<div className="overflow-x-auto">
+						<table className="min-w-full bg-white shadow-lg rounded-xl overflow-hidden">
+							<thead>
+								<tr className="bg-gradient-to-br from-green-400 to-green-600 text-white">
+									<th className="py-3 px-5 text-left">
+										Rank
+									</th>
+									<th className="py-3 px-5 text-left">
+										Name
+									</th>
+									<th className="py-3 px-5 text-left">
+										Galleries Visited
+									</th>
+									<th className="py-3 px-5 text-left">
+										Caches Left
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{leaderboard.map((entry, index) => {
+									// Rank styling
+									const rankColors = [
+										"text-yellow-500 font-bold", // Gold for 1st place
+										"text-gray-500 font-bold", // Silver for 2nd place
+										"text-orange-500 font-bold", // Bronze for 3rd place
+									];
+
+									return (
+										<tr
+											key={entry.uid}
+											className={`border-b transition duration-200 ease-in-out ${
+												index % 2 === 0
+													? "bg-gray-50"
+													: "bg-white"
+											} hover:bg-gray-100`}
+										>
+											<td
+												className={`py-3 px-5 ${
+													rankColors[index] ||
+													"text-gray-700"
+												}`}
+											>
+												{index + 1}
+											</td>
+											<td className="py-3 px-5 text-gray-900">
+												{entry.displayName}
+											</td>
+											<td className="py-3 px-5 text-gray-700">
+												{entry.galleriesVisited}
+											</td>
+											<td className="py-3 px-5 text-gray-700">
+												{entry.cachesLeft}
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+					</div>
 				) : (
-					<p className="text-gray-600">
+					<p className="text-gray-600 text-center mt-4">
 						No leaderboard data available.
 					</p>
 				)}
