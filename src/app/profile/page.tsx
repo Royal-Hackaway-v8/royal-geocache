@@ -7,16 +7,14 @@ import { subscribeToUser } from "@/services/userService";
 import { AppUser } from "@/types";
 
 export default function ProfilePage() {
-	const { user, loading } = useAuth(); // Ensure loading is provided by your AuthContext
+	const { user, loading } = useAuth();
 	const [userData, setUserData] = useState<AppUser | null>(null);
 
 	useEffect(() => {
-		console.log("ProfilePage - user:", user);
 		if (user) {
-			const unsubscribe = subscribeToUser(user.uid, (data) => {
-				console.log("ProfilePage - received userData:", data);
-				setUserData(data);
-			});
+			const unsubscribe = subscribeToUser(user.uid, (data) =>
+				setUserData(data)
+			);
 			return () => unsubscribe();
 		}
 	}, [user]);
@@ -39,22 +37,39 @@ export default function ProfilePage() {
 
 	return (
 		<PageView title="Your Profile">
-			<div className="max-w-md mx-auto bg-white p-6 rounded shadow">
-				<p>
-					<strong>UID:</strong> {user.uid}
-				</p>
-				<p>
-					<strong>Email:</strong> {user.email}
-				</p>
-				<p>
-					<strong>Display Name:</strong> {user.displayName || "N/A"}
-				</p>
-				{userData && userData.createdAt && (
-					<p>
-						<strong>Member Since:</strong>{" "}
-						{new Date(userData.createdAt).toLocaleDateString()}
+			<div className="bg-white rounded-2xl shadow-lg max-w-md w-full overflow-hidden transform transition duration-200 hover:-translate-y-1">
+				{/* Profile Header */}
+				<div className="bg-gradient-to-br from-green-200 to-green-500 p-6 text-center text-white">
+					<img
+						src={user.photoURL || "/default-avatar.png"}
+						alt="User Avatar"
+						className="w-24 h-24 rounded-full shadow-lg border-4 border-white mx-auto mb-4 object-cover"
+					/>
+					<h2 className="text-xl font-semibold">
+						{user.displayName || "Anonymous"}
+					</h2>
+					<p className="text-sm">{user.email}</p>
+				</div>
+
+				{/* Profile Body */}
+				<div className="p-6 text-gray-800">
+					<p className="mb-2">
+						<span className="font-semibold">UID:</span> {user.uid}
 					</p>
-				)}
+					{userData && userData.createdAt && (
+						<p className="mb-2">
+							<span className="font-semibold">Member Since:</span>{" "}
+							{new Date(userData.createdAt).toLocaleDateString()}
+						</p>
+					)}
+				</div>
+
+				{/* Profile Footer */}
+				<div className="p-6 pt-0 text-center">
+					<button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300">
+						Edit Profile
+					</button>
+				</div>
 			</div>
 		</PageView>
 	);
