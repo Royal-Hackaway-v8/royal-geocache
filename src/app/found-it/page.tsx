@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { CacheGallery, Cache, AppUser } from "@/types";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import {
 	subscribeToCacheGalleries,
 	addCacheToGallery,
@@ -376,175 +376,192 @@ export default function FoundItPage() {
 	};
 
 	return (
-		<PageView
-			title={cacheGallery ? `Found it: ${cacheGallery.name}` : "Found it"}
-		>
-			{!cacheGallery ? (
-				<p>Loading...</p>
-			) : (
-				<div className="container mx-auto p-4 space-y-6">
-					<div className="bg-gray-100 p-4 rounded-xl shadow">
-						<h1 className="text-2xl font-bold mb-2">
-							{cacheGallery.name}
-						</h1>
-						<p className="text-gray-700">
-							{cacheGallery.description}
-						</p>
-						<div className="mt-2">
-							<span className="font-semibold">Location:</span> (
-							{cacheGallery.lat}, {cacheGallery.lng})
+		<Suspense fallback={<div>Loading...</div>}>
+			<PageView
+				title={
+					cacheGallery ? `Found it: ${cacheGallery.name}` : "Found it"
+				}
+			>
+				{!cacheGallery ? (
+					<p>Loading...</p>
+				) : (
+					<div className="container mx-auto p-4 space-y-6">
+						<div className="bg-gray-100 p-4 rounded-xl shadow">
+							<h1 className="text-2xl font-bold mb-2">
+								{cacheGallery.name}
+							</h1>
+							<p className="text-gray-700">
+								{cacheGallery.description}
+							</p>
+							<div className="mt-2">
+								<span className="font-semibold">Location:</span>{" "}
+								({cacheGallery.lat}, {cacheGallery.lng})
+							</div>
+							<div className="mt-1">
+								<span className="font-semibold">
+									Expires on:
+								</span>{" "}
+								{new Date(
+									cacheGallery.expiryDate
+								).toLocaleDateString()}
+							</div>
+							<div className="mt-1">
+								<span className="font-semibold">
+									In distance:
+								</span>{" "}
+								{isWithinDistance ? "Yes" : "No"}
+							</div>
 						</div>
-						<div className="mt-1">
-							<span className="font-semibold">Expires on:</span>{" "}
-							{new Date(
-								cacheGallery.expiryDate
-							).toLocaleDateString()}
-						</div>
-						<div className="mt-1">
-							<span className="font-semibold">In distance:</span>{" "}
-							{isWithinDistance ? "Yes" : "No"}
-						</div>
-					</div>
 
-					{/* If not visited, show the submission form */}
-					<>
-						<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
-							<FaInfoCircle size={20} className="my-auto" />
-							<span>
-								To view the caches inside this gallery, you must
-								first submit a cache.
-							</span>
-						</div>
-						{isWithinDistance && !inCooldown && (
-							<div className="bg-gray-100 p-4 rounded-xl shadow">
-								<h2 className="text-xl font-bold mb-2">
-									Add a New Cache
-								</h2>
-								{errorMsg && (
-									<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
-										{errorMsg}
-									</div>
-								)}
-								<form
-									onSubmit={handleAddCache}
-									className="flex flex-col gap-4"
-								>
-									<ImageUploader
-										setImageBlob={setImageBlob}
-									/>
-									<AudioRecorder
-										setAudioBlob={setAudioBlob}
-									/>
-									<input
-										type="text"
-										placeholder="GIF URL"
-										className="p-2 border rounded"
-										value={gifUrl}
-										onChange={(e) =>
-											setGifUrl(e.target.value)
-										}
-										disabled={!isWithinDistance}
-									/>
-									<button
-										type="submit"
-										className="bg-green-500 text-white p-2 rounded-full shadow-lg"
-										disabled={!isWithinDistance || adding}
+						{/* If not visited, show the submission form */}
+						<>
+							<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
+								<FaInfoCircle size={20} className="my-auto" />
+								<span>
+									To view the caches inside this gallery, you
+									must first submit a cache.
+								</span>
+							</div>
+							{isWithinDistance && !inCooldown && (
+								<div className="bg-gray-100 p-4 rounded-xl shadow">
+									<h2 className="text-xl font-bold mb-2">
+										Add a New Cache
+									</h2>
+									{errorMsg && (
+										<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
+											{errorMsg}
+										</div>
+									)}
+									<form
+										onSubmit={handleAddCache}
+										className="flex flex-col gap-4"
 									>
-										{adding ? "Adding..." : "Add Cache"}
-									</button>
-								</form>
+										<ImageUploader
+											setImageBlob={setImageBlob}
+										/>
+										<AudioRecorder
+											setAudioBlob={setAudioBlob}
+										/>
+										<input
+											type="text"
+											placeholder="GIF URL"
+											className="p-2 border rounded"
+											value={gifUrl}
+											onChange={(e) =>
+												setGifUrl(e.target.value)
+											}
+											disabled={!isWithinDistance}
+										/>
+										<button
+											type="submit"
+											className="bg-green-500 text-white p-2 rounded-full shadow-lg"
+											disabled={
+												!isWithinDistance || adding
+											}
+										>
+											{adding ? "Adding..." : "Add Cache"}
+										</button>
+									</form>
+								</div>
+							)}
+						</>
+
+						{/* Leaderboard (always shown) */}
+						<div>
+							<h2 className="text-xl font-bold mb-2">
+								Leaderboard
+							</h2>
+							{Object.keys(leaderboard).map((key) => {
+								const data = leaderboard[key];
+								return (
+									<div key={key}>
+										{data.displayName}: {data.count}
+									</div>
+								);
+							})}
+						</div>
+
+						{/* Display caches if gallery is visited */}
+						{hasVisited ? (
+							<div className="bg-white p-4 rounded-xl shadow">
+								<h2 className="text-xl font-bold mb-2">
+									Caches
+								</h2>
+								<div className="grid grid-cols-1 gap-4">
+									{(Array.isArray(cacheGallery.cacheList)
+										? cacheGallery.cacheList
+										: (Object.values(
+												cacheGallery.cacheList || {}
+										  ) as Cache[])
+									).map((cache, index) => (
+										<div
+											key={index}
+											className="bg-gray-50 p-4 rounded-xl shadow"
+										>
+											<div className="mb-2">
+												<span className="font-semibold">
+													Updated By:
+												</span>{" "}
+												{cache.updatedByUid}
+											</div>
+											<div className="mb-2">
+												<span className="font-semibold">
+													Updated At:
+												</span>{" "}
+												{new Date(
+													cache.updatedAt
+												).toLocaleString()}
+											</div>
+											{cache.image && (
+												<div className="mb-2">
+													<img
+														src={cache.image}
+														alt="Cache Image"
+														className="w-full h-auto rounded"
+													/>
+												</div>
+											)}
+											{cache.gifUrl && (
+												<div className="mb-2">
+													<img
+														src={cache.gifUrl}
+														alt="Cache GIF"
+														className="w-full h-auto rounded"
+													/>
+												</div>
+											)}
+											{cache.audio && (
+												<div className="mb-2">
+													<audio
+														controls
+														className="w-full"
+													>
+														<source
+															src={cache.audio}
+														/>
+														Your browser does not
+														support the audio
+														element.
+													</audio>
+												</div>
+											)}
+										</div>
+									))}
+								</div>
+							</div>
+						) : (
+							<div className="bg-gray-50 border-l-4 border-gray-500 text-gray-700 p-4 rounded-xl flex gap-2">
+								<FaInfoCircle size={20} className="my-auto" />
+								<span>
+									Once you add a cache, this gallery will be
+									marked as visited and its contents will be
+									displayed.
+								</span>
 							</div>
 						)}
-					</>
-
-					{/* Leaderboard (always shown) */}
-					<div>
-						<h2 className="text-xl font-bold mb-2">Leaderboard</h2>
-						{Object.keys(leaderboard).map((key) => {
-							const data = leaderboard[key];
-							return (
-								<div key={key}>
-									{data.displayName}: {data.count}
-								</div>
-							);
-						})}
 					</div>
-
-					{/* Display caches if gallery is visited */}
-					{hasVisited ? (
-						<div className="bg-white p-4 rounded-xl shadow">
-							<h2 className="text-xl font-bold mb-2">Caches</h2>
-							<div className="grid grid-cols-1 gap-4">
-								{(Array.isArray(cacheGallery.cacheList)
-									? cacheGallery.cacheList
-									: (Object.values(
-											cacheGallery.cacheList || {}
-									  ) as Cache[])
-								).map((cache, index) => (
-									<div
-										key={index}
-										className="bg-gray-50 p-4 rounded-xl shadow"
-									>
-										<div className="mb-2">
-											<span className="font-semibold">
-												Updated By:
-											</span>{" "}
-											{cache.updatedByUid}
-										</div>
-										<div className="mb-2">
-											<span className="font-semibold">
-												Updated At:
-											</span>{" "}
-											{new Date(
-												cache.updatedAt
-											).toLocaleString()}
-										</div>
-										{cache.image && (
-											<div className="mb-2">
-												<img
-													src={cache.image}
-													alt="Cache Image"
-													className="w-full h-auto rounded"
-												/>
-											</div>
-										)}
-										{cache.gifUrl && (
-											<div className="mb-2">
-												<img
-													src={cache.gifUrl}
-													alt="Cache GIF"
-													className="w-full h-auto rounded"
-												/>
-											</div>
-										)}
-										{cache.audio && (
-											<div className="mb-2">
-												<audio
-													controls
-													className="w-full"
-												>
-													<source src={cache.audio} />
-													Your browser does not
-													support the audio element.
-												</audio>
-											</div>
-										)}
-									</div>
-								))}
-							</div>
-						</div>
-					) : (
-						<div className="bg-gray-50 border-l-4 border-gray-500 text-gray-700 p-4 rounded-xl flex gap-2">
-							<FaInfoCircle size={20} className="my-auto" />
-							<span>
-								Once you add a cache, this gallery will be
-								marked as visited and its contents will be
-								displayed.
-							</span>
-						</div>
-					)}
-				</div>
-			)}
-		</PageView>
+				)}
+			</PageView>
+		</Suspense>
 	);
 }
