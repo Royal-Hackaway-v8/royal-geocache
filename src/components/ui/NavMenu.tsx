@@ -11,7 +11,6 @@ import {
 	FaCog,
 	FaDatabase,
 	FaSignInAlt,
-	FaSignOutAlt,
 	FaPortrait,
 } from "react-icons/fa";
 
@@ -43,7 +42,7 @@ function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 }
 
 export default function NavMenu() {
-	const { user, signOutUser, loading } = useAuth();
+	const { user } = useAuth();
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
@@ -56,7 +55,7 @@ export default function NavMenu() {
 				<NavMenuLink
 					href="/"
 					label="CacheGrab"
-					icon={<FaHome />} // Add an icon
+					icon={<FaHome />}
 					className="rock-font font-normal"
 				/>
 				<NavMenuLink
@@ -71,16 +70,20 @@ export default function NavMenu() {
 					icon={<FaInfoCircle />}
 				/>
 				<NavMenuLink href="/manage" label="Manage" icon={<FaCog />} />
-				<NavMenuLink
-					href="/profile"
-					label="Profile"
-					icon={<FaPortrait />}
-				/>
-				<NavMenuLink
-					href="/login"
-					label="Sign In"
-					icon={<FaSignInAlt />}
-				/>
+				{mounted &&
+					(user ? (
+						<NavMenuLink
+							href="/profile"
+							label="Profile"
+							icon={<FaPortrait />}
+						/>
+					) : (
+						<NavMenuLink
+							href="/login"
+							label="Sign In"
+							icon={<FaSignInAlt />}
+						/>
+					))}
 			</div>
 		</nav>
 	);
