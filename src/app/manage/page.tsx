@@ -108,21 +108,75 @@ const ImageUploader = ({
 }: {
 	setImageBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
 }) => {
+	const [preview, setPreview] = useState<string | null>(null);
+	const [fileName, setFileName] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			setImageBlob(e.target.files[0]);
+		const file = e.target.files?.[0];
+
+		if (file) {
+			// Validate file type
+			if (!file.type.startsWith("image/")) {
+				setError("Please upload a valid image file.");
+				return;
+			}
+
+			// Validate file size (max 5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				setError("File size should not exceed 5MB.");
+				return;
+			}
+
+			setImageBlob(file);
+			setFileName(file.name);
+			setPreview(URL.createObjectURL(file));
+			setError(null);
 		}
 	};
 
+	const handleRemoveImage = () => {
+		setImageBlob(null);
+		setPreview(null);
+		setFileName(null);
+		setError(null);
+	};
+
 	return (
-		<div className="mb-4">
-			<label className="block mb-1">Image Upload</label>
-			<input
-				type="file"
-				accept="image/*"
-				onChange={handleImageChange}
-				className="w-full border p-2 rounded-full shadow-md"
-			/>
+		<div className="flex flex-col items-center gap-3 max-w-sm mx-auto">
+			{preview ? (
+				<div className="relative w-full">
+					<img
+						src={preview}
+						alt="Preview"
+						className="w-full h-48 object-cover rounded-lg shadow-md"
+					/>
+					<p className="mt-2 text-sm text-gray-600 text-center">
+						{fileName}
+					</p>
+					<button
+						onClick={handleRemoveImage}
+						className="mt-2 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md transition"
+					>
+						Remove
+					</button>
+				</div>
+			) : (
+				<label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg text-gray-500 hover:bg-gray-100 cursor-pointer transition">
+					<input
+						type="file"
+						accept="image/*"
+						onChange={handleImageChange}
+						hidden
+					/>
+					<div className="flex flex-col items-center">
+						<span className="text-3xl">📷</span>
+						<p className="mt-1 text-sm">Click to upload an image</p>
+					</div>
+				</label>
+			)}
+
+			{error && <p className="text-red-500 text-xs">{error}</p>}
 		</div>
 	);
 };
