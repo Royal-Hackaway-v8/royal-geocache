@@ -61,3 +61,59 @@ export const addGalleryToUserCachesCollected = async (
 	}
 	await update(userRef, { cachesCollected: updatedCaches });
 };
+
+export const subscribeToAllUsers = (
+	callback: (users: { [uid: string]: AppUser }) => void
+) => {
+	const usersRef = ref(DB, "users");
+	return onValue(
+		usersRef,
+		(snapshot) => {
+			if (!snapshot.exists()) {
+				console.log("No users found in database");
+				callback({});
+				return;
+			}
+
+			const data = snapshot.val();
+			console.log("Raw users data from Firebase:", data);
+
+			// Ensure we get an object of users
+			if (typeof data === "object" && data !== null) {
+				// Filter out any non-user data and ensure each user has required fields
+				const validUsers = Object.entries(data).reduce(
+					(acc, [uid, userData]) => {
+						if (
+							userData &&
+							typeof userData === "object" &&
+							"uid" in userData
+						) {
+							// Ensure cachesCollected is always an array
+							const user = {
+								...(userData as AppUser),
+								cachesCollected: Array.isArray(
+									(userData as AppUser).cachesCollected
+								)
+									? (userData as AppUser).cachesCollected
+									: [],
+							};
+							acc[uid] = user;
+						}
+						return acc;
+					},
+					{} as { [uid: string]: AppUser }
+				);
+
+				console.log("Processed users data:", validUsers);
+				callback(validUsers);
+			} else {
+				console.log("Invalid users data structure:", data);
+				callback({});
+			}
+		},
+		(error) => {
+			console.error("Error subscribing to users:", error);
+			callback({});
+		}
+	);
+};
