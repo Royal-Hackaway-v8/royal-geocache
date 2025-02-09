@@ -5,6 +5,7 @@ import PageView from "@/components/ui/PageView";
 import { subscribeToCaches } from "@/services/cacheService";
 import { useEffect, useState } from "react";
 import { Cache } from "@/types";
+import ARCapsule from "@/components/ar/ARCapsule";
 
 export default function CachePage() {
 	// Initialize state as an array of MarkerLocation objects
@@ -26,6 +27,10 @@ export default function CachePage() {
 
 	return (
 		<PageView title="Caches">
+			<div>
+				<ARCapsule />
+			</div>
+
 			{/* Render the list of caches */}
 			{cacheMarkers.length ? (
 				cacheMarkers.map((marker) => (
