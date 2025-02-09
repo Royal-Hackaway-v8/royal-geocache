@@ -1,0 +1,10 @@
+-   [ ] XR integration
+    -   [ ] Get it bloody working
+    -   [ ] Use capsule model for rendering
+-   [ ] Tree API
+-   [x] Rainbow coloring of markers
+-   [ ] Better UI
+-   [ ] /cache/[id] pages
+-   [ ] object for
+-   [ ] Giphy/GIFs integration
+-   [ ]
