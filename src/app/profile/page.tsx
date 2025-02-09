@@ -7,7 +7,7 @@ import { subscribeToUser } from "@/services/userService";
 import { AppUser } from "@/types";
 
 export default function ProfilePage() {
-	const { user, loading } = useAuth();
+	const { user, loading, handleSignOut } = useAuth();
 	const [userData, setUserData] = useState<AppUser | null>(null);
 
 	useEffect(() => {
@@ -65,10 +65,19 @@ export default function ProfilePage() {
 				</div>
 
 				{/* Profile Footer */}
-				<div className="p-6 pt-0 text-center">
+				<div className="flex p-6 pt-0 text-center gap-2 justify-center">
 					<button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300">
 						Edit Profile
 					</button>
+					{user && (
+						<button
+							type="button"
+							onClick={handleSignOut}
+							className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"
+						>
+							Sign Out
+						</button>
+					)}
 				</div>
 			</div>
 		</PageView>
