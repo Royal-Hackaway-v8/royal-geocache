@@ -80,7 +80,7 @@ export default function Home() {
 				<h2 className="text-3xl italic md:text-6xl font-bold drop-shadow-lg text-green-400 opacity-80">
 					Grab Your Cache Today!
 				</h2>
-				<Link href="/manage">
+				<Link href="/map">
 					<button className="mt-6 px-6 py-3 text-lg font-semibold bg-green-500 hover:bg-green-600 transition-all rounded-full shadow-lg">
 						Start Hunting
 					</button>
