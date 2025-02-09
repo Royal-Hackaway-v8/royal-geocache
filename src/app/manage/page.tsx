@@ -12,7 +12,7 @@ import {
 } from "@/services/cacheService";
 import { useAuth } from "@/context/AuthContext";
 
-// Convert blob to Base64 string and ensure we don't pass undefined values
+// Convert blob to Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -21,12 +21,13 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.readAsDataURL(blob);
 	});
 
-// Interface for gallery form input state
+// Update interface to include gifUrl
 interface CacheFormInput {
 	name: string;
 	description: string;
 	lat: string;
 	lng: string;
+	gifUrl: string; // New field for GIF URL
 }
 
 // Audio Recorder Component
@@ -174,7 +175,6 @@ const CacheForm = ({
 				className="w-full border p-2 rounded mb-4"
 			></textarea>
 
-			{/* Latitude & Longitude */}
 			<div className="flex space-x-4 mb-4">
 				<input
 					type="number"
@@ -204,6 +204,15 @@ const CacheForm = ({
 				Use My Location
 			</button>
 
+			<input
+				type="text"
+				name="gifUrl"
+				value={formData.gifUrl}
+				onChange={handleChange}
+				placeholder="GIF URL"
+				className="w-full border p-2 rounded mb-4"
+			/>
+
 			<ImageUploader setImageBlob={setImageBlob} />
 			<AudioRecorder setAudioBlob={setAudioBlob} />
 
@@ -218,7 +227,7 @@ const CacheForm = ({
 					<button
 						type="button"
 						onClick={cancelEdit}
-						className="w-full bg-gray-500 text-white p-2 rounded"
+						className="w-full bg-gray-500 text-white p-2 rounded-full shadow-lg"
 					>
 						Cancel Edit
 					</button>
@@ -286,6 +295,7 @@ const CacheList = ({
 						Created: {formatTimestamp(gallery.createdAt)}
 					</p>
 
+					{/* Display Image Preview */}
 					{gallery.cacheList[0]?.image && (
 						<div
 							className="cursor-pointer hover:opacity-75 mb-2"
@@ -304,6 +314,26 @@ const CacheList = ({
 						</div>
 					)}
 
+					{/* Display GIF Preview */}
+					{gallery.cacheList[0]?.gifUrl && (
+						<div
+							className="cursor-pointer hover:opacity-75 mb-2"
+							onClick={() =>
+								handleOpenModal(
+									"image",
+									gallery.cacheList[0].gifUrl!
+								)
+							}
+						>
+							<img
+								src={gallery.cacheList[0].gifUrl}
+								alt="Gallery GIF Preview"
+								className="max-w-xs"
+							/>
+						</div>
+					)}
+
+					{/* Display Audio if available */}
 					{gallery.cacheList[0]?.audio && (
 						<div className="mb-2">
 							<audio
@@ -337,6 +367,7 @@ const CacheList = ({
 				</div>
 			))}
 
+			{/* Modal for viewing image/audio */}
 			{modalContent && (
 				<div
 					className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
@@ -388,18 +419,24 @@ const AddCacheModal = ({
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 
+	// New state for GIF URL input (string)
+	const [gifUrl, setGifUrl] = useState("");
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const newCacheData: Omit<Cache, "id"> = {
 			updatedAt: Date.now(),
 			updatedByUid: user.uid,
 		};
-		// Only add properties if they exist
 		if (imageBlob) {
 			newCacheData.image = await blobToBase64(imageBlob);
 		}
 		if (audioBlob) {
 			newCacheData.audio = await blobToBase64(audioBlob);
+		}
+		// Only add gifUrl if provided
+		if (gifUrl.trim()) {
+			newCacheData.gifUrl = gifUrl.trim();
 		}
 		try {
 			await addCacheToGallery(gallery.id, newCacheData);
@@ -427,9 +464,20 @@ const AddCacheModal = ({
 					X
 				</button>
 				<h2 className="text-xl font-bold mb-4">Add Cache to Gallery</h2>
-				<form onSubmit={handleSubmit}>
+				<form onSubmit={handleSubmit} className="space-y-4">
 					<ImageUploader setImageBlob={setImageBlob} />
 					<AudioRecorder setAudioBlob={setAudioBlob} />
+					{/* New input for GIF URL */}
+					<div>
+						<label className="block mb-1">GIF URL</label>
+						<input
+							type="text"
+							value={gifUrl}
+							onChange={(e) => setGifUrl(e.target.value)}
+							placeholder="Enter GIF URL"
+							className="w-full border p-2 rounded"
+						/>
+					</div>
 					<button
 						type="submit"
 						className="w-full bg-blue-500 text-white p-2 rounded-full mt-4"
@@ -451,6 +499,7 @@ export default function ManagePage() {
 		description: "",
 		lat: "",
 		lng: "",
+		gifUrl: "", // New field for GIF URL
 	});
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -459,6 +508,9 @@ export default function ManagePage() {
 	);
 	const [selectedGalleryForNewCache, setSelectedGalleryForNewCache] =
 		useState<CacheGallery | null>(null);
+	const [cacheAddedSuccess, setCacheAddedSuccess] = useState<string | null>(
+		null
+	);
 
 	// Subscribe to cache galleries on component mount
 	useEffect(() => {
@@ -467,6 +519,15 @@ export default function ManagePage() {
 		);
 		return () => unsubscribe();
 	}, []);
+
+	// Completed handleCacheAdded function
+	const handleCacheAdded = () => {
+		// Since subscription auto-updates galleries, just show a success message
+		setCacheAddedSuccess("Cache added successfully!");
+		setTimeout(() => {
+			setCacheAddedSuccess(null);
+		}, 3000);
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -490,7 +551,7 @@ export default function ManagePage() {
 					...(audioBlob
 						? { audio: await blobToBase64(audioBlob) }
 						: {}),
-					gifUrl: undefined,
+					gifUrl: formData.gifUrl ? formData.gifUrl : undefined,
 				},
 			});
 			setEditingGalleryId(null);
@@ -516,13 +577,19 @@ export default function ManagePage() {
 					...(audioBlob
 						? { audio: await blobToBase64(audioBlob) }
 						: {}),
-					gifUrl: undefined,
+					gifUrl: formData.gifUrl ? formData.gifUrl : undefined,
 				},
 			};
 			await createCacheGallery(galleryData);
 		}
 		// Reset form state
-		setFormData({ name: "", description: "", lat: "", lng: "" });
+		setFormData({
+			name: "",
+			description: "",
+			lat: "",
+			lng: "",
+			gifUrl: "",
+		});
 		setImageBlob(null);
 		setAudioBlob(null);
 	};
@@ -556,6 +623,7 @@ export default function ManagePage() {
 			description: gallery.description,
 			lat: gallery.lat.toString(),
 			lng: gallery.lng.toString(),
+			gifUrl: "", // Optionally pre-fill if your data includes a GIF URL
 		});
 		setEditingGalleryId(gallery.id);
 	};
@@ -571,7 +639,13 @@ export default function ManagePage() {
 
 	const cancelEdit = () => {
 		setEditingGalleryId(null);
-		setFormData({ name: "", description: "", lat: "", lng: "" });
+		setFormData({
+			name: "",
+			description: "",
+			lat: "",
+			lng: "",
+			gifUrl: "",
+		});
 		setImageBlob(null);
 		setAudioBlob(null);
 	};
@@ -580,13 +654,13 @@ export default function ManagePage() {
 		setSelectedGalleryForNewCache(gallery);
 	};
 
-	const handleCacheAdded = () => {
-		// Optionally, refresh galleries after adding a cache.
-		// For now, our subscription should pick up the change.
-	};
-
 	return (
 		<PageView title="Manage Cache Galleries">
+			{cacheAddedSuccess && (
+				<div className="bg-green-100 text-green-800 p-2 rounded mb-4">
+					{cacheAddedSuccess}
+				</div>
+			)}
 			<CacheForm
 				formData={formData}
 				setFormData={setFormData}
