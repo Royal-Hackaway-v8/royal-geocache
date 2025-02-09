@@ -4,10 +4,7 @@ import React, { useEffect, useState } from "react";
 import PageView from "@/components/ui/PageView";
 import { useAuth } from "@/context/AuthContext";
 import { subscribeToUser } from "@/services/userService";
-import {
-	subscribeToCacheGalleries,
-	addCacheToGallery,
-} from "@/services/cacheService";
+import { subscribeToCacheGalleries } from "@/services/cacheService";
 import { AppUser, CacheGallery } from "@/types";
 import { FaShieldAlt } from "react-icons/fa";
 
@@ -17,26 +14,8 @@ export default function ProfilePage() {
 	const [visitedCacheGalleries, setVisitedCacheGalleries] = useState<
 		CacheGallery[]
 	>([]);
-	// const [galleries, setGalleries] = useState<CacheGallery[]>([]);
 
-	useEffect(() => {
-		if (userData === null) return;
-		const unsubscribe = subscribeToCacheGalleries(
-			(galleries: CacheGallery[]) => {
-				setVisitedCacheGalleries(
-					galleries.filter(
-						(gal) => gal.id in userData.cachesCollected
-					)
-				);
-			}
-		);
-		return () => unsubscribe();
-	}, [userData]);
-
-	useEffect(() => {
-		console.log(visitedCacheGalleries);
-	}, [visitedCacheGalleries]);
-
+	// Subscribe to the logged in user's data
 	useEffect(() => {
 		if (user) {
 			const unsubscribe = subscribeToUser(user.uid, (data) =>
@@ -45,6 +24,24 @@ export default function ProfilePage() {
 			return () => unsubscribe();
 		}
 	}, [user]);
+
+	// Once userData is loaded, subscribe to cache galleries and filter those visited by the user.
+	useEffect(() => {
+		if (!userData) return;
+		const userCaches = userData.cachesCollected || [];
+		const unsubscribe = subscribeToCacheGalleries(
+			(galleries: CacheGallery[]) => {
+				setVisitedCacheGalleries(
+					galleries.filter((gal) => userCaches.includes(gal.id))
+				);
+			}
+		);
+		return () => unsubscribe();
+	}, [userData]);
+
+	useEffect(() => {
+		console.log("Visited Galleries:", visitedCacheGalleries);
+	}, [visitedCacheGalleries]);
 
 	if (loading) {
 		return (
@@ -62,6 +59,29 @@ export default function ProfilePage() {
 		);
 	}
 
+	const formatDateWithOrdinal = (date: number) => {
+		const d = new Date(date);
+		const day = d.getDate();
+		const month = d.toLocaleString("en-US", { month: "long" });
+		const year = d.getFullYear();
+
+		// Function to get ordinal suffix (st, nd, rd, th)
+		const getOrdinalSuffix = (n: number) => {
+			if (n > 3 && n < 21) return "th"; // Covers 11th-19th
+			switch (n % 10) {
+				case 1:
+					return "st";
+				case 2:
+					return "nd";
+				case 3:
+					return "rd";
+				default:
+					return "th";
+			}
+		};
+
+		return `${month} ${day}${getOrdinalSuffix(day)}, ${year}`;
+	};
 	return (
 		<PageView>
 			<div className="bg-white rounded-2xl shadow-lg max-w-md w-full overflow-hidden transform transition duration-200 hover:-translate-y-1">
@@ -91,7 +111,7 @@ export default function ProfilePage() {
 					{userData && userData.createdAt && (
 						<p className="mb-2">
 							<span className="font-semibold">Member Since:</span>{" "}
-							{new Date(userData.createdAt).toLocaleDateString()}
+							{formatDateWithOrdinal(userData.createdAt)}
 						</p>
 					)}
 				</div>
@@ -101,24 +121,30 @@ export default function ProfilePage() {
 					<button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300">
 						Edit Profile
 					</button>
-					{user && (
-						<button
-							type="button"
-							onClick={handleSignOut}
-							className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"
-						>
-							Sign Out
-						</button>
-					)}
+					<button
+						type="button"
+						onClick={handleSignOut}
+						className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"
+					>
+						Sign Out
+					</button>
 				</div>
 			</div>
 
 			{/* Visited Caches */}
 			<div className="mt-8 bg-white max-w-md w-full rounded-2xl shadow-lg p-6">
-				<div>Visited Caches</div>
-				{visitedCacheGalleries.map((cg) => {
-					return <div>{cg.name}</div>;
-				})}
+				<h2 className="text-xl font-bold mb-4">Visited Caches</h2>
+				{!userData ? (
+					<p>Loading caches...</p>
+				) : visitedCacheGalleries.length > 0 ? (
+					visitedCacheGalleries.map((cg) => (
+						<div key={cg.id} className="mb-2">
+							{cg.name}
+						</div>
+					))
+				) : (
+					<p>No visited caches found.</p>
+				)}
 			</div>
 		</PageView>
 	);
