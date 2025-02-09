@@ -892,7 +892,7 @@ export default function ManagePage() {
 
 	return (
 		<PageView title="Manage Galleries & Groups">
-			<div className="flex flex-col md:flex-row gap-4">
+			<div className="flex flex-col md:flex-row gap-4 mx-4">
 				{/* Galleries Management Panel */}
 				<div className="flex-1">
 					{cacheAddedSuccess && (
