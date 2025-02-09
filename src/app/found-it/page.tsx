@@ -365,6 +365,11 @@ function FoundItPageContent() {
 			if (!hasVisited) {
 				await markGalleryAsVisited(cacheGallery.id);
 			}
+
+			if (user.email) {
+				await createPledgeTransaction(user.email);
+			}
+
 			setImageBlob(null);
 			setAudioBlob(null);
 			setGifUrl("");
