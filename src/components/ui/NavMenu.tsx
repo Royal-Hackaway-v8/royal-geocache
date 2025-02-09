@@ -46,6 +46,7 @@ function NavMenuLink({ href, label, icon: Icon, className }: NavMenuLinkProps) {
 		</Link>
 	);
 }
+
 export default function NavMenu() {
 	const { user } = useAuth();
 	const [mounted, setMounted] = useState(false);
@@ -115,7 +116,7 @@ export default function NavMenu() {
 
 			{/* Desktop Menu */}
 			<nav className="hidden md:flex fixed top-4 w-full justify-center z-50 pointer-events-none px-2">
-				<div className="max-w-[90%] w-fit bg-black text-white backdrop-blur-lg flex gap-1 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto overflow-x-auto whitespace-nowrap">
+				<div className="max-w-[90%] w-fit bg-black text-white backdrop-blur-lg flex gap-0 items-center p-2 text-sm rounded-full shadow-xl font-semibold pointer-events-auto overflow-x-auto whitespace-nowrap">
 					{navLinks}
 				</div>
 			</nav>
