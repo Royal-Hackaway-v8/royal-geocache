@@ -1,9 +1,13 @@
 import { ref, onValue, push, set, update, remove } from "firebase/database";
 import { DB } from "@/config/firebase";
-import { CacheGallery, Cache } from "@/types";
+import { CacheGallery, Cache, CacheGroup } from "@/types";
 
 // Utility function to remove undefined properties
 const sanitizeObject = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
+// ----------------------
+// Gallery Functions
+// ----------------------
 
 // Subscribe to cache galleries
 export const subscribeToCacheGalleries = (
@@ -80,4 +84,48 @@ export const addCacheToGallery = async (
 	const sanitizedCache = sanitizeObject(newCache);
 	const newCacheRef = push(cacheListRef);
 	await set(newCacheRef, sanitizedCache);
+};
+
+// ----------------------
+// Group Functions
+// ----------------------
+
+// Subscribe to cache groups
+export const subscribeToCacheGroups = (
+	callback: (groups: CacheGroup[]) => void
+) => {
+	const groupsRef = ref(DB, "cacheGroups/");
+	return onValue(groupsRef, (snapshot) => {
+		const data = snapshot.val();
+		if (data) {
+			const groups = Object.entries(data).map(([id, group]) => ({
+				...(group as CacheGroup),
+				id,
+			}));
+			callback(groups);
+		} else {
+			callback([]);
+		}
+	});
+};
+
+// Create a new cache group
+export const createCacheGroup = async (groupData: Omit<CacheGroup, "id">) => {
+	const newGroupRef = push(ref(DB, "cacheGroups/"));
+	await set(newGroupRef, groupData);
+};
+
+// Update an existing cache group
+export const updateCacheGroup = async (
+	id: string,
+	groupData: Partial<Omit<CacheGroup, "id">>
+) => {
+	const groupRef = ref(DB, `cacheGroups/${id}`);
+	await update(groupRef, groupData);
+};
+
+// Delete a cache group
+export const deleteCacheGroup = async (id: string) => {
+	const groupRef = ref(DB, `cacheGroups/${id}`);
+	await remove(groupRef);
 };
