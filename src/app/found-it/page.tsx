@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { CacheGallery } from "@/types";
+import { CacheGallery, Cache } from "@/types";
 import { useEffect, useState, useRef } from "react";
 import {
 	subscribeToCacheGalleries,
@@ -12,8 +12,8 @@ import { getDistance } from "@/lib/distance";
 import { CACHING_THRESHOLD } from "@/lib/constants";
 import { FaInfoCircle } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
+import { useAuth } from "@/context/AuthContext";
 
-// --- Audio Recorder Component ---
 const AudioRecorder = ({
 	setAudioBlob,
 }: {
@@ -80,7 +80,6 @@ const AudioRecorder = ({
 	);
 };
 
-// --- Image Uploader Component ---
 const ImageUploader = ({
 	setImageBlob,
 }: {
@@ -93,12 +92,10 @@ const ImageUploader = ({
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (file) {
-			// Validate file type
 			if (!file.type.startsWith("image/")) {
 				setError("Please upload a valid image file.");
 				return;
 			}
-			// Validate file size (max 5MB)
 			if (file.size > 5 * 1024 * 1024) {
 				setError("File size should not exceed 5MB.");
 				return;
@@ -155,7 +152,6 @@ const ImageUploader = ({
 	);
 };
 
-// --- Blob to Base64 utility ---
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -164,13 +160,12 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.readAsDataURL(blob);
 	});
 
-// ---------- FoundItPage Component ----------
 export default function FoundItPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const cacheGalleryID = searchParams.get("cacheGalleryID");
+	const { user } = useAuth();
 
-	// User location & distance state
 	const [userLocation, setUserLocation] = useState<{
 		lat: number;
 		lon: number;
@@ -191,7 +186,6 @@ export default function FoundItPage() {
 		return () => navigator.geolocation.clearWatch(watchId);
 	}, []);
 
-	// Gallery state
 	const [cacheGallery, setCacheGallery] = useState<CacheGallery | null>(null);
 	useEffect(() => {
 		if (!cacheGalleryID) {
@@ -206,10 +200,12 @@ export default function FoundItPage() {
 				if (!foundGallery) {
 					router.push("/map");
 				} else {
-					// Ensure cacheList is an array. If it's an object, convert it.
+					// Convert cacheList to an array of Cache objects
 					const cacheList = Array.isArray(foundGallery.cacheList)
 						? foundGallery.cacheList
-						: Object.values(foundGallery.cacheList || {});
+						: (Object.values(
+								foundGallery.cacheList || {}
+						  ) as Cache[]);
 					setCacheGallery({ ...foundGallery, cacheList });
 				}
 			}
@@ -217,7 +213,6 @@ export default function FoundItPage() {
 		return () => unsubscribe();
 	}, [cacheGalleryID, router]);
 
-	// Calculate distance to gallery
 	useEffect(() => {
 		if (!userLocation || !cacheGallery) return;
 		const distanceTo = getDistance(userLocation, {
@@ -227,41 +222,39 @@ export default function FoundItPage() {
 		setIsWithinDistance(distanceTo < CACHING_THRESHOLD);
 	}, [userLocation, cacheGallery]);
 
-	// New states for cache form using file upload and recording
 	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 	const [gifUrl, setGifUrl] = useState("");
 	const [adding, setAdding] = useState(false);
 	const [errorMsg, setErrorMsg] = useState("");
-	// New state to track whether the gallery has been visited (i.e. a cache was submitted)
 	const [hasVisited, setHasVisited] = useState(false);
 
-	// Function to mark gallery as visited (update user's cachesCollected list)
 	const markGalleryAsVisited = async (galleryId: string) => {
-		// TODO: Replace this with your actual logic to update the user's cachesCollected list in your database
 		console.log("Marking gallery as visited:", galleryId);
-		// For now, we just update the local state:
 		setHasVisited(true);
 	};
 
 	const handleAddCache = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!cacheGallery) return;
+		if (!user) {
+			alert("You must be logged in to add a cache.");
+			setAdding(false);
+			return;
+		}
 		setAdding(true);
 		setErrorMsg("");
 		try {
 			await addCacheToGallery(cacheGallery.id, {
 				updatedAt: Date.now(),
-				updatedByUid: "anonymous", // TODO: Replace with actual user ID if available
+				updatedByUid: user.uid,
 				image: imageBlob ? await blobToBase64(imageBlob) : undefined,
 				audio: audioBlob ? await blobToBase64(audioBlob) : undefined,
 				gifUrl: gifUrl.trim() ? gifUrl.trim() : undefined,
 			});
-			// Mark the gallery as visited if not already done
 			if (!hasVisited) {
 				await markGalleryAsVisited(cacheGallery.id);
 			}
-			// Reset cache form fields
 			setImageBlob(null);
 			setAudioBlob(null);
 			setGifUrl("");
@@ -370,9 +363,9 @@ export default function FoundItPage() {
 							<div className="grid grid-cols-1 gap-4">
 								{(Array.isArray(cacheGallery.cacheList)
 									? cacheGallery.cacheList
-									: Object.values(
+									: (Object.values(
 											cacheGallery.cacheList || {}
-									  )
+									  ) as Cache[])
 								).map((cache, index) => (
 									<div
 										key={index}
