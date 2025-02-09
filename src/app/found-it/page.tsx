@@ -219,7 +219,8 @@ function FoundItPageContent() {
 	// Check if the extended user has already visited this gallery
 	useEffect(() => {
 		if (appUser && cacheGalleryID) {
-			if (appUser.cachesCollected.includes(cacheGalleryID)) {
+			const collected = appUser.cachesCollected ?? [];
+			if (collected.includes(cacheGalleryID)) {
 				setHasVisited(true);
 			}
 		}
@@ -354,7 +355,7 @@ function FoundItPageContent() {
 			return;
 		}
 		setAdding(true);
-		setErrorMsg("");
+
 		try {
 			await addCacheToGallery(cacheGallery.id, {
 				updatedAt: Date.now(),
