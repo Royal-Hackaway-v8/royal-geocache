@@ -197,12 +197,16 @@ const Map: React.FC<MapProps> = ({
 				iconAnchor: [15, 30],
 			});
 			const popupContent = `
-        <div>
-          <h3 class="font-bold">${marker.name}</h3>
+        <div className="p-2">
+          <h3 class="font-bold">${marker.name} (${
+				marker.distanceToPlayer < 1
+					? `${Math.ceil(marker.distanceToPlayer * 1000)}m`
+					: `${marker.distanceToPlayer.toFixed(2)}km`
+			})</h3>
           ${marker.description ? `<p>${marker.description}</p>` : ""}
           <a href="/found-it/?cacheGalleryID=${
 				marker.id
-			}" class="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded mt-2">
+			}" class="inline-block bg-indigo-100 hover:bg-indigo-200 text-white px-3 py-1 w-full text-center rounded-full shadow-md mt-2">
             View Details
           </a>
         </div>
@@ -281,7 +285,7 @@ const Map: React.FC<MapProps> = ({
 											toggleGroupCheckbox(group);
 										}}
 										onClick={(e) => e.stopPropagation()}
-										className="form-checkbox h-4 w-4"
+										className="appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-green-400 checked:border-green-400 focus:outline-none transition-colors cursor-pointer"
 									/>
 									<span className="font-bold">
 										{group.name}
@@ -313,7 +317,7 @@ const Map: React.FC<MapProps> = ({
 													onChange={() =>
 														toggleGallery(galleryId)
 													}
-													className="form-checkbox h-4 w-4"
+													className="appearance-none h-4 w-4 border border-gray-300 rounded-sm bg-white checked:bg-green-400 checked:border-green-400 focus:outline-none transition-colors cursor-pointer"
 												/>
 												<a
 													href={`/found-it/?cacheGalleryID=${gallery.id}`}
