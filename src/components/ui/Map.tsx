@@ -166,9 +166,9 @@ const Map: React.FC<MapProps> = ({
 			return;
 		userLocationLayerRef.current.clearLayers();
 		const iconSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="blue" width="30" height="30">
-        <path d="M172.268 501.67C47.961 332.033 0 275.195 0 208c0-79.5 64.5-144 144-144s144 64.5 144 144c0 67.195-47.961 124.03-172.268 293.67a24.005 24.005 0 0 1-39.464 0zM144 208a28 28 0 1 0 56 0 28 28 0 1 0-56 0z"></path>
-      </svg>
+      <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="40" fill="#0041C2" />
+</svg>
     `;
 		const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
 		const customIcon = LEAFLET_CLIENT.icon({
