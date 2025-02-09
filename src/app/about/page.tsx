@@ -3,7 +3,7 @@ import PageView from "@/components/ui/PageView";
 export default function AboutPage() {
 	return (
 		<PageView title="">
-			<div className="min-h-screen bg-white py-12 rounded-2xl">
+			<div className="min-h-screen py-12">
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
 					<div className="prose lg:prose-xl">
 						{/* Main Title with Animation */}
@@ -12,7 +12,7 @@ export default function AboutPage() {
 						</h1>
 
 						{/* Hero Section */}
-						<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg transition-all hover:shadow-xl">
+						<div className="bg-white backdrop-blur-md rounded-2xl p-6 mb-8 shadow-lg transition-all hover:shadow-xl">
 							<p className="text-lg leading-relaxed text-gray-700">
 								Welcome to{" "}
 								<span className="font-semibold text-green-500">
@@ -32,7 +32,7 @@ export default function AboutPage() {
 								<h2 className="text-3xl font-bold mb-4 text-green-500 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
 									Our Mission
 								</h2>
-								<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
+								<div className="bg-white backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
 									<p className="text-gray-700 leading-relaxed">
 										We're transforming campus exploration
 										into an immersive game. Our platform
@@ -42,13 +42,14 @@ export default function AboutPage() {
 										<li>
 											📍 Real-world navigation challenges
 										</li>
-										<li>
+										<li>🌲 Impactful tree-planting</li>
+										<li>🎮 Gamified campus adventures</li>
+										{/* <li>
 											📱 Augmented reality experiences
-										</li>
-										<li>🎮 Gamified learning adventures</li>
-										<li>
+										</li> */}
+										{/* <li>
 											👥 Social collaboration features
-										</li>
+										</li> */}
 									</ul>
 								</div>
 							</div>
@@ -58,7 +59,7 @@ export default function AboutPage() {
 								<h2 className="text-3xl font-bold mb-4 text-green-500 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
 									How It Works
 								</h2>
-								<div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
+								<div className="bg-white backdrop-blur-md rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl">
 									<div className="grid gap-6">
 										<div className="space-y-2">
 											<h3 className="text-xl font-semibold text-gray-800">
