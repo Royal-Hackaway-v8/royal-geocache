@@ -705,7 +705,7 @@ const GroupList = ({
 					<h3 className="text-lg font-semibold">{group.name}</h3>
 					<p>{group.description}</p>
 					<p className="text-gray-600 text-sm">
-						Galleries: {group.groupList.join(", ")}
+						Galleries: {group.groupList.join(", ") || ""}
 					</p>
 					<div className="mt-2 flex space-x-2">
 						<button
