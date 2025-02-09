@@ -16,7 +16,7 @@ import {
 } from "@/services/cacheService";
 import { useAuth } from "@/context/AuthContext";
 
-// Convert a Blob to a Base64 string
+// Utility: Convert a Blob to Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -52,20 +52,17 @@ const AudioRecorder = ({
 			});
 			const recorder = new MediaRecorder(stream);
 			audioChunksRef.current = [];
-
 			recorder.ondataavailable = (event) => {
 				if (event.data.size > 0) {
 					audioChunksRef.current.push(event.data);
 				}
 			};
-
 			recorder.onstop = () => {
 				const blob = new Blob(audioChunksRef.current, {
 					type: "audio/webm",
 				});
 				setAudioBlob(blob);
 			};
-
 			recorder.start();
 			setMediaRecorder(recorder);
 			setIsRecording(true);
@@ -114,20 +111,15 @@ const ImageUploader = ({
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-
 		if (file) {
-			// Validate file type
 			if (!file.type.startsWith("image/")) {
 				setError("Please upload a valid image file.");
 				return;
 			}
-
-			// Validate file size (max 5MB)
 			if (file.size > 5 * 1024 * 1024) {
 				setError("File size should not exceed 5MB.");
 				return;
 			}
-
 			setImageBlob(file);
 			setFileName(file.name);
 			setPreview(URL.createObjectURL(file));
@@ -175,7 +167,6 @@ const ImageUploader = ({
 					</div>
 				</label>
 			)}
-
 			{error && <p className="text-red-500 text-xs">{error}</p>}
 		</div>
 	);
@@ -676,7 +667,6 @@ const GroupList = ({
 };
 
 // ---------- Main ManagePage Component ----------
-
 export default function ManagePage() {
 	const { user } = useAuth();
 
@@ -709,11 +699,17 @@ export default function ManagePage() {
 	});
 	const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
-	// Subscribe to galleries
+	// Subscribe to galleries with cacheList conversion
 	useEffect(() => {
-		const unsubscribe = subscribeToCacheGalleries((galleries) =>
-			setGalleries(galleries)
-		);
+		const unsubscribe = subscribeToCacheGalleries((galleries) => {
+			const convertedGalleries = galleries.map((gallery) => ({
+				...gallery,
+				cacheList: Array.isArray(gallery.cacheList)
+					? gallery.cacheList
+					: (Object.values(gallery.cacheList || {}) as Cache[]),
+			}));
+			setGalleries(convertedGalleries);
+		});
 		return () => unsubscribe();
 	}, []);
 
@@ -862,7 +858,6 @@ export default function ManagePage() {
 			return;
 		}
 		if (editingGroupId) {
-			// Optimistically update the group in local state
 			setGroups((prev) =>
 				prev.map((group) =>
 					group.id === editingGroupId
@@ -883,11 +878,9 @@ export default function ManagePage() {
 				});
 			} catch (error) {
 				alert("Failed to update group.");
-				// Optionally revert by re-fetching groups
 			}
 			setEditingGroupId(null);
 		} else {
-			// Create a temporary group object for optimistic update
 			const tempId = "temp-" + Date.now();
 			const newGroup: CacheGroup = {
 				id: tempId,
@@ -895,7 +888,6 @@ export default function ManagePage() {
 				description: groupForm.description,
 				groupList: groupForm.groupList,
 			};
-			// Optimistically add the new group to local state
 			setGroups((prev) => [...prev, newGroup]);
 			try {
 				await createCacheGroup({
@@ -905,7 +897,6 @@ export default function ManagePage() {
 				});
 			} catch (error) {
 				alert("Failed to create group.");
-				// Revert optimistic update
 				setGroups((prev) =>
 					prev.filter((group) => group.id !== tempId)
 				);
@@ -925,15 +916,12 @@ export default function ManagePage() {
 
 	const handleDeleteGroup = async (id: string) => {
 		if (confirm("Are you sure you want to delete this group?")) {
-			// Keep a copy of the current groups for potential rollback
 			const originalGroups = groups;
-			// Optimistically remove the group
 			setGroups((prev) => prev.filter((group) => group.id !== id));
 			try {
 				await deleteCacheGroup(id);
 			} catch (error) {
 				alert("Failed to delete group.");
-				// Revert deletion on error
 				setGroups(originalGroups);
 			}
 		}
