@@ -18,6 +18,7 @@ export interface AppUser extends AuthUser {
 	// score?: number;
 	// preferences?: Record<string, any>;
 	cachesCollected: CacheGalleryID[];
+	isStaff: boolean;
 }
 
 // Geocache item type
