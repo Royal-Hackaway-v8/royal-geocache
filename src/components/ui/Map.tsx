@@ -130,7 +130,10 @@ const Map: React.FC<MapProps> = ({
 
 	// Initialize Leaflet map on first render
 	useEffect(() => {
+		if (!LEAFLET_CLIENT) return;
+
 		if (mapRef.current) return;
+
 		mapRef.current = LEAFLET_CLIENT.map("map", {
 			center: initialCenter,
 			zoom,
@@ -155,7 +158,7 @@ const Map: React.FC<MapProps> = ({
 		userLocationLayerRef.current = LEAFLET_CLIENT.layerGroup().addTo(
 			mapRef.current
 		);
-	}, [initialCenter, zoom]);
+	}, [initialCenter, zoom, LEAFLET_CLIENT]);
 
 	// Update user location marker on the map
 	useEffect(() => {
