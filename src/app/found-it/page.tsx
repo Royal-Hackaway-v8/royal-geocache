@@ -19,6 +19,9 @@ import {
 	subscribeToUser,
 } from "@/services/userService";
 
+const COOLDOWN_PERIOD = 60000; // 60 seconds
+
+// AudioRecorder component
 const AudioRecorder = ({
 	setAudioBlob,
 }: {
@@ -85,6 +88,7 @@ const AudioRecorder = ({
 	);
 };
 
+// ImageUploader component
 const ImageUploader = ({
 	setImageBlob,
 }: {
@@ -166,12 +170,11 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 	});
 
 // Helper to get a display name for a user based on uid.
-// If the current user matches, we use their displayName.
 const getUserDisplayName = (uid: string, currentUser: AppUser | null) => {
 	if (currentUser && currentUser.uid === uid && currentUser.displayName) {
 		return currentUser.displayName;
 	}
-	return uid; // fallback to uid if no display name available
+	return uid;
 };
 
 export default function FoundItPage() {
@@ -180,7 +183,9 @@ export default function FoundItPage() {
 	const cacheGalleryID = searchParams.get("cacheGalleryID");
 	const { user } = useAuth();
 
-	// Create a state for extended user data (AppUser)
+	const [inCooldown, setInCooldown] = useState<boolean>(true);
+
+	// Extended user data (AppUser)
 	const [appUser, setAppUser] = useState<AppUser | null>(null);
 	useEffect(() => {
 		if (user) {
@@ -262,11 +267,10 @@ export default function FoundItPage() {
 		return () => unsubscribe();
 	}, [cacheGalleryID, router]);
 
+	// Update leaderboard names from Firebase
 	useEffect(() => {
 		async function updateLeaderboardNames() {
-			// Make a copy of the current leaderboard
 			const updatedLeaderboard = { ...leaderboard };
-			// For each uid, fetch user data and update the displayName if available
 			const uids = Object.keys(updatedLeaderboard);
 			await Promise.all(
 				uids.map(async (uid) => {
@@ -284,7 +288,7 @@ export default function FoundItPage() {
 		}
 	}, [leaderboard]);
 
-	// Compute leaderboard using reduce and get proper display names
+	// Compute the leaderboard
 	useEffect(() => {
 		if (!cacheGallery) return;
 		const newLeaderboard = cacheGallery.cacheList.reduce((acc, cache) => {
@@ -302,6 +306,24 @@ export default function FoundItPage() {
 		}, {} as { [uid: string]: { displayName: string; count: number } });
 		setLeaderboard(newLeaderboard);
 	}, [cacheGallery, appUser]);
+
+	// Cooldown logic: Check if the current user is allowed to add another cache
+	useEffect(() => {
+		if (!appUser || !cacheGallery) return;
+		const userCaches = cacheGallery.cacheList.filter(
+			(c) => c.updatedByUid === appUser.uid
+		);
+		if (userCaches.length === 0) {
+			setInCooldown(false);
+		} else {
+			// Get the most recent cache posted by this user in this gallery
+			const latestCache = userCaches.sort(
+				(a, b) => b.updatedAt - a.updatedAt
+			)[0];
+			const diff = Date.now() - latestCache.updatedAt;
+			setInCooldown(diff < COOLDOWN_PERIOD);
+		}
+	}, [appUser, cacheGallery]);
 
 	// Check distance from user to gallery
 	useEffect(() => {
@@ -387,59 +409,55 @@ export default function FoundItPage() {
 					</div>
 
 					{/* If not visited, show the submission form */}
-					{!hasVisited && (
-						<>
-							<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
-								<FaInfoCircle size={20} className="my-auto" />
-								<span>
-									To view the caches inside this gallery, you
-									must first submit a cache.
-								</span>
-							</div>
-							{isWithinDistance && (
-								<div className="bg-gray-100 p-4 rounded-xl shadow">
-									<h2 className="text-xl font-bold mb-2">
-										Add a New Cache
-									</h2>
-									{errorMsg && (
-										<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
-											{errorMsg}
-										</div>
-									)}
-									<form
-										onSubmit={handleAddCache}
-										className="flex flex-col gap-4"
+					<>
+						<div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-xl flex gap-2 shadow">
+							<FaInfoCircle size={20} className="my-auto" />
+							<span>
+								To view the caches inside this gallery, you must
+								first submit a cache.
+							</span>
+						</div>
+						{isWithinDistance && !inCooldown && (
+							<div className="bg-gray-100 p-4 rounded-xl shadow">
+								<h2 className="text-xl font-bold mb-2">
+									Add a New Cache
+								</h2>
+								{errorMsg && (
+									<div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded mb-2">
+										{errorMsg}
+									</div>
+								)}
+								<form
+									onSubmit={handleAddCache}
+									className="flex flex-col gap-4"
+								>
+									<ImageUploader
+										setImageBlob={setImageBlob}
+									/>
+									<AudioRecorder
+										setAudioBlob={setAudioBlob}
+									/>
+									<input
+										type="text"
+										placeholder="GIF URL"
+										className="p-2 border rounded"
+										value={gifUrl}
+										onChange={(e) =>
+											setGifUrl(e.target.value)
+										}
+										disabled={!isWithinDistance}
+									/>
+									<button
+										type="submit"
+										className="bg-green-500 text-white p-2 rounded-full shadow-lg"
+										disabled={!isWithinDistance || adding}
 									>
-										<ImageUploader
-											setImageBlob={setImageBlob}
-										/>
-										<AudioRecorder
-											setAudioBlob={setAudioBlob}
-										/>
-										<input
-											type="text"
-											placeholder="GIF URL"
-											className="p-2 border rounded"
-											value={gifUrl}
-											onChange={(e) =>
-												setGifUrl(e.target.value)
-											}
-											disabled={!isWithinDistance}
-										/>
-										<button
-											type="submit"
-											className="bg-green-500 text-white p-2 rounded-full shadow-lg"
-											disabled={
-												!isWithinDistance || adding
-											}
-										>
-											{adding ? "Adding..." : "Add Cache"}
-										</button>
-									</form>
-								</div>
-							)}
-						</>
-					)}
+										{adding ? "Adding..." : "Add Cache"}
+									</button>
+								</form>
+							</div>
+						)}
+					</>
 
 					{/* Leaderboard (always shown) */}
 					<div>
