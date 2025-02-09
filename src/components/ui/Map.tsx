@@ -180,7 +180,12 @@ const Map: React.FC<MapProps> = ({
 
 	// Update map markers based on distance and selection state
 	useEffect(() => {
-		if (!mapRef.current || !markersLayerRef.current || !markerWithDistance)
+		if (
+			!mapRef.current ||
+			!markersLayerRef.current ||
+			!markerWithDistance ||
+			!LEAFLET_CLIENT
+		)
 			return;
 		markersLayerRef.current.clearLayers();
 		markerWithDistance.forEach((marker) => {
