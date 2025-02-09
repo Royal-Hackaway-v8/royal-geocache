@@ -9,7 +9,7 @@ import {
 } from "@/services/cacheService";
 import PageView from "@/components/ui/PageView";
 import { getDistance } from "@/lib/distance";
-import { CACHING_THRESHOLD } from "@/lib/constants";
+import { CACHING_THRESHOLD, COOLDOWN_PERIOD } from "@/lib/constants";
 import { FaInfoCircle } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
 import { useAuth } from "@/context/AuthContext";
@@ -18,8 +18,6 @@ import {
 	getUser,
 	subscribeToUser,
 } from "@/services/userService";
-
-const COOLDOWN_PERIOD = 60000; // 60 seconds
 
 // AudioRecorder component
 const AudioRecorder = ({
