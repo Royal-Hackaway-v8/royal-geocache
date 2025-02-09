@@ -18,6 +18,7 @@ import {
 	getUser,
 	subscribeToUser,
 } from "@/services/userService";
+import { createPledgeTransaction } from "@/services/verdn";
 
 // AudioRecorder component
 const AudioRecorder = ({

@@ -1,4 +1,4 @@
-const createPledgeTransaction = async (emailToUse: string) => {
+export const createPledgeTransaction = async (emailToUse: string) => {
 	const data = {
 		reference: "CacheGrab-" + emailToUse,
 		recipient: { email: emailToUse },
