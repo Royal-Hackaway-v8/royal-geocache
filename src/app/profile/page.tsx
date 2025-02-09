@@ -101,11 +101,11 @@ export default function ProfilePage() {
 
 				{/* Profile Body */}
 				<div className="p-6 text-gray-800">
-					<p className="mb-2">
+					{/* <p className="mb-2">
 						<span className="font-semibold">UID:</span> {user.uid}
-					</p>
+					</p> */}
 					{userData && userData.createdAt && (
-						<p className="mb-2">
+						<p className="mb-2 mx-auto text-center">
 							<span className="font-semibold">Member Since:</span>{" "}
 							{formatDateWithOrdinal(userData.createdAt)}
 						</p>
