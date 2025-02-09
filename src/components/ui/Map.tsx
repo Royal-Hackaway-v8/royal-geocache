@@ -172,7 +172,7 @@ const Map: React.FC<MapProps> = ({
 
 	return (
 		<div className="flex w-full">
-			<div className="overflow-hidden rounded-xl shadow-lg w-full">
+			<div className="overflow-hidden rounded-xl shadow-lg w-full ml-5">
 				<div id="map" className="h-96 w-full" />
 			</div>
 			<div className="w-72 mx-5 p-5 bg-white flex flex-col rounded-xl">
