@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { CacheGallery } from "@/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
 	subscribeToCacheGalleries,
 	addCacheToGallery,
@@ -10,8 +10,160 @@ import {
 import PageView from "@/components/ui/PageView";
 import { getDistance } from "@/lib/distance";
 
-const CACHING_THRESHOLD = 0.5; // Define your caching threshold distance here
+const CACHING_THRESHOLD = 0.5; // in km
 
+// --- Audio Recorder Component ---
+const AudioRecorder = ({
+	setAudioBlob,
+}: {
+	setAudioBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
+}) => {
+	const [isRecording, setIsRecording] = useState(false);
+	const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+		null
+	);
+	const audioChunksRef = useRef<Blob[]>([]);
+
+	const startRecording = async () => {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: true,
+			});
+			const recorder = new MediaRecorder(stream);
+			audioChunksRef.current = [];
+			recorder.ondataavailable = (event) => {
+				if (event.data.size > 0) {
+					audioChunksRef.current.push(event.data);
+				}
+			};
+			recorder.onstop = () => {
+				const blob = new Blob(audioChunksRef.current, {
+					type: "audio/webm",
+				});
+				setAudioBlob(blob);
+			};
+			recorder.start();
+			setMediaRecorder(recorder);
+			setIsRecording(true);
+		} catch (err) {
+			alert("Unable to access microphone.");
+		}
+	};
+
+	const stopRecording = () => {
+		mediaRecorder?.stop();
+		setIsRecording(false);
+	};
+
+	return (
+		<div className="mb-4">
+			<label className="block mb-1">Record Audio</label>
+			{!isRecording ? (
+				<button
+					type="button"
+					onClick={startRecording}
+					className="w-full bg-green-500 text-white p-2 rounded-full shadow-md"
+				>
+					Start Recording
+				</button>
+			) : (
+				<button
+					type="button"
+					onClick={stopRecording}
+					className="w-full bg-red-500 text-white p-2 rounded-full shadow-md"
+				>
+					Stop Recording
+				</button>
+			)}
+		</div>
+	);
+};
+
+// --- Image Uploader Component ---
+const ImageUploader = ({
+	setImageBlob,
+}: {
+	setImageBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
+}) => {
+	const [preview, setPreview] = useState<string | null>(null);
+	const [fileName, setFileName] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+
+	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			// Validate file type
+			if (!file.type.startsWith("image/")) {
+				setError("Please upload a valid image file.");
+				return;
+			}
+			// Validate file size (max 5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				setError("File size should not exceed 5MB.");
+				return;
+			}
+			setImageBlob(file);
+			setFileName(file.name);
+			setPreview(URL.createObjectURL(file));
+			setError(null);
+		}
+	};
+
+	const handleRemoveImage = () => {
+		setImageBlob(null);
+		setPreview(null);
+		setFileName(null);
+		setError(null);
+	};
+
+	return (
+		<div className="flex flex-col items-center gap-3 max-w-sm mx-auto">
+			{preview ? (
+				<div className="relative w-full">
+					<img
+						src={preview}
+						alt="Preview"
+						className="w-full h-48 object-cover rounded-lg shadow-md"
+					/>
+					<p className="mt-2 text-sm text-gray-600 text-center">
+						{fileName}
+					</p>
+					<button
+						onClick={handleRemoveImage}
+						className="mt-2 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md transition"
+					>
+						Remove
+					</button>
+				</div>
+			) : (
+				<label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-lg text-gray-500 hover:bg-gray-100 cursor-pointer transition">
+					<input
+						type="file"
+						accept="image/*"
+						onChange={handleImageChange}
+						hidden
+					/>
+					<div className="flex flex-col items-center">
+						<span className="text-3xl">📷</span>
+						<p className="mt-1 text-sm">Click to upload an image</p>
+					</div>
+				</label>
+			)}
+			{error && <p className="text-red-500 text-xs">{error}</p>}
+		</div>
+	);
+};
+
+// --- Blob to Base64 utility ---
+const blobToBase64 = (blob: Blob): Promise<string> =>
+	new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => resolve(reader.result as string);
+		reader.onerror = reject;
+		reader.readAsDataURL(blob);
+	});
+
+// ---------- FoundItPage Component ----------
 export default function FoundItPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -19,8 +171,8 @@ export default function FoundItPage() {
 
 	// User location & distance state
 	const [userLocation, setUserLocation] = useState<{
-		lon: number;
 		lat: number;
+		lon: number;
 	} | null>(null);
 	const [isWithinDistance, setIsWithinDistance] = useState<boolean>(false);
 
@@ -60,7 +212,7 @@ export default function FoundItPage() {
 		return () => unsubscribe();
 	}, [cacheGalleryID, router]);
 
-	// Calculate distance using the defined threshold
+	// Calculate distance to gallery
 	useEffect(() => {
 		if (!userLocation || !cacheGallery) return;
 		const distanceTo = getDistance(userLocation, {
@@ -70,12 +222,10 @@ export default function FoundItPage() {
 		setIsWithinDistance(distanceTo < CACHING_THRESHOLD);
 	}, [userLocation, cacheGallery]);
 
-	// States for the Add Cache form
-	const [newCacheData, setNewCacheData] = useState({
-		image: "",
-		audio: "",
-		gifUrl: "",
-	});
+	// New states for cache form using file upload and recording
+	const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+	const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+	const [gifUrl, setGifUrl] = useState("");
 	const [adding, setAdding] = useState(false);
 	const [errorMsg, setErrorMsg] = useState("");
 
@@ -88,11 +238,14 @@ export default function FoundItPage() {
 			await addCacheToGallery(cacheGallery.id, {
 				updatedAt: Date.now(),
 				updatedByUid: "anonymous", // TODO: Replace with actual user ID if available
-				image: newCacheData.image ? newCacheData.image : undefined,
-				audio: newCacheData.audio ? newCacheData.audio : undefined,
-				gifUrl: newCacheData.gifUrl ? newCacheData.gifUrl : undefined,
+				image: imageBlob ? await blobToBase64(imageBlob) : undefined,
+				audio: audioBlob ? await blobToBase64(audioBlob) : undefined,
+				gifUrl: gifUrl.trim() ? gifUrl.trim() : undefined,
 			});
-			setNewCacheData({ image: "", audio: "", gifUrl: "" });
+			// Reset cache form fields
+			setImageBlob(null);
+			setAudioBlob(null);
+			setGifUrl("");
 		} catch (err) {
 			console.error("Error adding cache:", err);
 			setErrorMsg("Failed to add cache. Please try again.");
@@ -109,7 +262,7 @@ export default function FoundItPage() {
 			) : (
 				<div className="container mx-auto p-4">
 					{/* Gallery Header */}
-					<div className="mb-6">
+					<div className="mb-6 bg-gray-100 p-4 rounded-xl">
 						<h1 className="text-2xl font-bold mb-2">
 							{cacheGallery.name}
 						</h1>
@@ -132,7 +285,7 @@ export default function FoundItPage() {
 						</div>
 					</div>
 
-					{/* Add Cache Form (always rendered) */}
+					{/* Add Cache Form */}
 					<div className="mb-6 border p-4 rounded-xl bg-gray-100">
 						<h2 className="text-xl font-bold mb-2">
 							Add a New Cache
@@ -148,45 +301,16 @@ export default function FoundItPage() {
 						)}
 						<form
 							onSubmit={handleAddCache}
-							className="flex flex-col gap-2"
+							className="flex flex-col gap-4"
 						>
-							<input
-								type="text"
-								placeholder="Image URL"
-								className="p-2 border rounded"
-								value={newCacheData.image}
-								onChange={(e) =>
-									setNewCacheData({
-										...newCacheData,
-										image: e.target.value,
-									})
-								}
-								disabled={!isWithinDistance}
-							/>
-							<input
-								type="text"
-								placeholder="Audio URL"
-								className="p-2 border rounded"
-								value={newCacheData.audio}
-								onChange={(e) =>
-									setNewCacheData({
-										...newCacheData,
-										audio: e.target.value,
-									})
-								}
-								disabled={!isWithinDistance}
-							/>
+							<ImageUploader setImageBlob={setImageBlob} />
+							<AudioRecorder setAudioBlob={setAudioBlob} />
 							<input
 								type="text"
 								placeholder="GIF URL"
 								className="p-2 border rounded"
-								value={newCacheData.gifUrl}
-								onChange={(e) =>
-									setNewCacheData({
-										...newCacheData,
-										gifUrl: e.target.value,
-									})
-								}
+								value={gifUrl}
+								onChange={(e) => setGifUrl(e.target.value)}
 								disabled={!isWithinDistance}
 							/>
 							<button
@@ -199,7 +323,7 @@ export default function FoundItPage() {
 						</form>
 					</div>
 
-					{/* Full Cache List */}
+					{/* Cache List */}
 					<div>
 						<h2 className="text-xl font-bold mb-2">Caches</h2>
 						<div className="grid grid-cols-1 gap-4">
