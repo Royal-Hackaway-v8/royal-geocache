@@ -14,6 +14,10 @@ import {
 	FaPortrait,
 } from "react-icons/fa";
 
+import { subscribeToUser } from "@/services/userService";
+import { AppUser } from "@/types";
+import router from "next/router";
+
 interface NavMenuLinkProps {
 	href: string;
 	label: React.ReactNode;
@@ -34,7 +38,7 @@ function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 						: "text-white hover:bg-white/20"
 				}`}
 			>
-				{icon} {/* Render the icon */}
+				{icon}
 				{label}
 			</div>
 		</Link>
@@ -44,10 +48,23 @@ function NavMenuLink({ href, label, icon, className }: NavMenuLinkProps) {
 export default function NavMenu() {
 	const { user } = useAuth();
 	const [mounted, setMounted] = useState(false);
+	const [appUser, setAppUser] = useState<AppUser | null>(null);
 
 	useEffect(() => {
 		setMounted(true);
-	}, []);
+
+		if (user?.uid) {
+			// Subscribe to user data
+			const unsubscribe = subscribeToUser(
+				user.uid,
+				(fetchedUser: AppUser | null) => {
+					setAppUser(fetchedUser); // Directly set the fetched user
+				}
+			);
+
+			return () => unsubscribe();
+		}
+	}, [user]);
 
 	return (
 		<nav className="fixed top-4 w-full flex justify-center z-50 pointer-events-none">
@@ -58,18 +75,22 @@ export default function NavMenu() {
 					icon={<FaHome />}
 					className="rock-font font-normal"
 				/>
-				<NavMenuLink
-					href="/caches"
-					label="Caches"
-					icon={<FaDatabase />}
-				/>
 				<NavMenuLink href="/map" label="Map" icon={<FaMap />} />
 				<NavMenuLink
 					href="/about"
 					label="About"
 					icon={<FaInfoCircle />}
 				/>
-				<NavMenuLink href="/manage" label="Manage" icon={<FaCog />} />
+
+				{/* Only show 'Manage' if the user is staff */}
+				{mounted && appUser?.isStaff && (
+					<NavMenuLink
+						href="/manage"
+						label="Manage"
+						icon={<FaCog />}
+					/>
+				)}
+
 				{mounted &&
 					(user ? (
 						<NavMenuLink
