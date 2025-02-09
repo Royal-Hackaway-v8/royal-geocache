@@ -97,7 +97,7 @@ export default function GlobalLeaderboardPage() {
 	if (Object.keys(users).length === 0 || galleries.length === 0) {
 		return (
 			<PageView title="Global Leaderboard">
-				<div className="container mx-2 p-4 bg-white rounded-xl shadow-lg">
+				<div className="w-fit mx-2 p-4 bg-white rounded-xl shadow-lg">
 					<p className="text-gray-600 text-center">
 						Loading leaderboard data...
 					</p>
