@@ -163,6 +163,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 		reader.onerror = reject;
 		reader.readAsDataURL(blob);
 	});
+
 // ---------- FoundItPage Component ----------
 export default function FoundItPage() {
 	const router = useRouter();
@@ -205,7 +206,11 @@ export default function FoundItPage() {
 				if (!foundGallery) {
 					router.push("/map");
 				} else {
-					setCacheGallery(foundGallery);
+					// Ensure cacheList is an array. If it's an object, convert it.
+					const cacheList = Array.isArray(foundGallery.cacheList)
+						? foundGallery.cacheList
+						: Object.values(foundGallery.cacheList || {});
+					setCacheGallery({ ...foundGallery, cacheList });
 				}
 			}
 		);
@@ -274,7 +279,7 @@ export default function FoundItPage() {
 			{!cacheGallery ? (
 				<p>Loading...</p>
 			) : (
-				<div className="container mx-auto p-4 white space-y-6">
+				<div className="container mx-auto p-4 space-y-6">
 					{/* Gallery Header Card */}
 					<div className="bg-gray-100 p-4 rounded-xl shadow">
 						<h1 className="text-2xl font-bold mb-2">
@@ -363,7 +368,12 @@ export default function FoundItPage() {
 						<div className="bg-white p-4 rounded-xl shadow">
 							<h2 className="text-xl font-bold mb-2">Caches</h2>
 							<div className="grid grid-cols-1 gap-4">
-								{cacheGallery.cacheList.map((cache, index) => (
+								{(Array.isArray(cacheGallery.cacheList)
+									? cacheGallery.cacheList
+									: Object.values(
+											cacheGallery.cacheList || {}
+									  )
+								).map((cache, index) => (
 									<div
 										key={index}
 										className="bg-gray-50 p-4 rounded-xl shadow"
